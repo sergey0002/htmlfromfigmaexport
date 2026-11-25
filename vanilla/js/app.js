@@ -1,179 +1,82 @@
-// Поведение статического сайта — один IIFE без зависимостей, подключение с defer.
-// Связан с разметкой build.mjs: data-scroll/data-scrolltop, #burger/#mobileMenu,
-// [data-tab] + *-panel, .desktop-nav .nav-link, секции из #team… #contacts.
-;(function () {
-  "use strict"
+/* Behaviour translated from the Figma React export; no framework runtime. */
+(() => {
+  const header = document.querySelector('header');
+  const headerBar = header.children[1];
+  const menuButton = header.querySelector('[aria-controls="site-mobile-menu"]');
+  const menuTemplate = document.getElementById('mobile-menu-template');
 
-  // ── Плавный скролл к разделу ─────────────────────────────────────────────
+  menuButton.addEventListener('click', () => {
+    const existing = document.getElementById('site-mobile-menu');
+    const open = !existing;
+    if (existing) existing.remove();
+    else header.append(menuTemplate.content.cloneNode(true));
+    menuButton.setAttribute('aria-expanded', String(open));
+    menuButton.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+  });
 
-  // ── Табы первенства: таблица / результаты / плейофф ──────────────────────
-
-  // ── Подсветка активного раздела (как IntersectionObserver в React:
-  //    раздел задевает полосу 40%–45% высоты вьюпорта, иначе — ничего) ─────
-  // идём снизу вверх: последний задевший полосу раздел ближе к центру
-
-  // ── Мобильное меню: плавное раскрытие (шторка + каскад пунктов) ──────────
-  // даём браузеру отрисовать закрытое состояние, затем запускаем transition
-  // тап по пустому месту меню тоже закрывает (пункты обрабатывает data-scroll)
-
-  function scrollToId(id) {
-    var el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+  function updateHeader() {
+    const compact = window.scrollY > 80;
+    headerBar.classList.toggle('py-2.5', compact);
+    for (const name of ['py-[19px]', 'md:py-[30px]', 'lg:py-6']) {
+      headerBar.classList.toggle(name, !compact);
+    }
   }
-  var tabButtons = Array.prototype.slice.call(
-    document.querySelectorAll("[data-tab]"),
-  )
-  var panels = {
-    standings: document.getElementById("standings-panel"),
-    results: document.getElementById("results-panel"),
-    playoffs: document.getElementById("playoffs-panel"),
-  }
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  updateHeader();
 
-  tabButtons.forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      var id = tab.getAttribute("data-tab")
-      tabButtons.forEach(function (t) {
-        var on =
-          t ===
-          tab
-        t.classList.toggle("is-active", on)
-        t.setAttribute("aria-selected", on ? "true" : "false")
-      })
-      Object.keys(panels).forEach(function (key) {
-        if (panels[key])
-          panels[key].hidden =
-            key !==
-            id
-      })
-    })
-  })
-  var links = Array.prototype.slice.call(
-    document.querySelectorAll(
-      ".desktop-nav .nav-link, .mobile-menu button, .footer-link",
-    ),
-  )
-  var ids = ["team", "coaching", "standings", "history", "partners", "contacts"]
-
-  function setActive(id) {
-    links.forEach(function (l) {
-      l.classList.toggle(
-        "active",
-        !!id &&
-          l.getAttribute("data-scroll") ===
-            id,
-      )
-    })
-  }
-
-  function syncActive() {
-    var bandTop =
-      window.innerHeight *
-      0.4
-    var bandBottom =
-      window.innerHeight *
-      0.45
-    var bestId = ""
-    for (
-      var i =
-        ids.length -
-        1;
-      i >=
-      0;
-      i -= 1
-    ) {
-      var el = document.getElementById(ids[i])
-      if (!el) continue
-      var r = el.getBoundingClientRect()
-      if (
-        r.top <=
-          bandBottom &&
-        r.bottom >=
-          bandTop
-      ) {
-        bestId = ids[i]
-        break
+  for (const id of ['capital', 'military', 'tradein']) {
+    const card = document.getElementById(id);
+    const button = card.querySelector('button');
+    const template = document.getElementById(`details-${id}`);
+    button.addEventListener('click', () => {
+      const current = card.querySelector('[data-card-details]');
+      const expanded = !current;
+      if (current) current.remove();
+      else {
+        const content = template.content.firstElementChild.cloneNode(true);
+        content.dataset.cardDetails = '';
+        button.before(content);
       }
-    }
-    setActive(bestId)
+      button.setAttribute('aria-expanded', String(expanded));
+      button.firstChild.textContent = expanded ? 'Свернуть' : 'Подробнее об условиях';
+      button.querySelector('svg').classList.toggle('rotate-45', expanded);
+    });
   }
 
-  var ticking = false
-  window.addEventListener(
-    "scroll",
-    function () {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(function () {
-        syncActive()
-        ticking = false
-      })
-    },
-    { passive: true },
-  )
-  window.addEventListener("resize", syncActive)
-  syncActive()
-  var burger = document.getElementById("burger")
-  var menu = document.getElementById("mobileMenu")
-  var menuTimer = null
-
-  function openMenu() {
-    if (!menu) return
-    clearTimeout(menuTimer)
-    menu.hidden = false
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        menu.classList.add("is-open")
-        menu.classList.remove("closing")
-      })
-    })
-    if (burger) {
-      burger.classList.add("open")
-      burger.setAttribute("aria-expanded", "true")
-      burger.setAttribute("aria-label", "Закрыть меню")
-    }
+  const options = document.querySelectorAll('nav[aria-label="Способы покупки"] a');
+  for (const link of options) {
+    link.addEventListener('click', () => {
+      for (const option of options) {
+        const active = option === link;
+        for (const name of ['border-[#e30613]', 'bg-[#e30613]', 'text-white']) option.classList.toggle(name, active);
+        for (const name of ['border-neutral-200', 'bg-white', 'hover:border-[#e30613]', 'hover:text-[#e30613]']) option.classList.toggle(name, !active);
+        option.firstElementChild.classList.toggle('text-white', active);
+        option.firstElementChild.classList.toggle('text-neutral-500', !active);
+      }
+    });
   }
 
-  function closeMenu() {
-    if (!menu || menu.hidden) return
-    menu.classList.remove("is-open")
-    menu.classList.add("closing")
-    if (burger) {
-      burger.classList.remove("open")
-      burger.setAttribute("aria-expanded", "false")
-      burger.setAttribute("aria-label", "Открыть меню")
-    }
-    clearTimeout(menuTimer)
-    menuTimer = setTimeout(function () {
-      menu.hidden = true
-      menu.classList.remove("closing")
-    }, 240)
+  // The source replaces unavailable images with an icon and the alt text. Keep
+  // the fallback visible without JS, and use the original asset if it appears.
+  for (const fallback of document.querySelectorAll('[data-image-src]')) {
+    const image = new Image();
+    image.alt = fallback.dataset.imageAlt;
+    image.className = fallback.dataset.imageClass;
+    image.addEventListener('load', () => fallback.replaceWith(image), { once: true });
+    image.src = fallback.dataset.imageSrc;
   }
 
-  if (burger && menu) {
-    menu.hidden = true
-    burger.addEventListener("click", function (e) {
-      e.preventDefault()
-      if (menu.hidden) openMenu()
-      else closeMenu()
-    })
-    menu.addEventListener("click", function (e) {
-      if (!e.target.closest("button, a")) closeMenu()
-    })
+  // Match the source's Image component for other assets that fail to load.
+  function replaceBrokenImage(image) {
+    if (!image.isConnected) return;
+    const span = document.createElement('span');
+    span.className = 'flex items-center gap-2 text-sm font-semibold';
+    span.innerHTML = '<svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 3v7m7-7v7m7-7v7M3 21h18"></path></svg>';
+    span.append(document.createTextNode(image.alt));
+    image.replaceWith(span);
   }
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeMenu()
-  })
-
-  document.addEventListener("click", function (e) {
-    var btn = e.target.closest("[data-scroll]")
-    if (btn) {
-      scrollToId(btn.getAttribute("data-scroll"))
-      closeMenu()
-      return
-    }
-    if (e.target.closest("[data-scrolltop]")) {
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    }
-  })
-})()
+  for (const image of document.querySelectorAll('#root img')) {
+    if (image.complete && !image.naturalWidth) replaceBrokenImage(image);
+    else image.addEventListener('error', () => replaceBrokenImage(image), { once: true });
+  }
+})();
