@@ -11,6 +11,7 @@ import re
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+import xml.etree.ElementTree as ET
 
 IGNORED = {"node_modules", ".git", "dist", "build", ".vite", "__pycache__"}
 LFS = b"version https://git-lfs.github.com/spec/v1\n"
@@ -126,6 +127,8 @@ class Page(HTMLParser):
         if tag == 'img' and 'alt' not in a: self.problems.append('img без alt')
         for attr in ('src', 'href', 'poster'):
             if a.get(attr): self.refs.append((tag, attr, a[attr]))
+        if a.get('data-image-src'):
+            self.refs.append((tag, 'data-image-src', a['data-image-src']))
         if a.get('srcset'):
             for item in a['srcset'].split(','):
                 if item.strip(): self.refs.append((tag, 'srcset', item.strip().split()[0]))
@@ -149,6 +152,7 @@ def check_site(root: Path) -> dict:
     pages = [p for p in files(root) if p.suffix.lower() in ('.html', '.htm')]
     if not pages: return {'status': 'BLOCKED', 'issues': ['HTML-страницы не найдены']}
     docs, issues, warnings = {}, [], []
+    checked_svg = set()
     for p in pages:
         try:
             parser = Page(); parser.feed(p.read_text(encoding='utf8')); parser.close(); docs[p] = parser
@@ -168,7 +172,15 @@ def check_site(root: Path) -> dict:
                 continue
             if not target.is_file(): warnings.append(f'{p.relative_to(root)}: отсутствует файл {ref}'); continue
             with target.open('rb') as f:
-                if f.read(len(LFS)) == LFS: warnings.append(f'{p.relative_to(root)}: LFS pointer вместо ресурса: {ref}')
+                is_pointer = f.read(len(LFS)) == LFS
+            if is_pointer:
+                warnings.append(f'{p.relative_to(root)}: LFS pointer вместо ресурса: {ref}')
+            elif target.suffix.lower() == '.svg' and target not in checked_svg:
+                checked_svg.add(target)
+                try:
+                    ET.parse(target)
+                except (ET.ParseError, OSError) as exc:
+                    warnings.append(f'{p.relative_to(root)}: повреждённый SVG {ref}: {exc}')
             if fragment and target in docs and fragment not in docs[target].ids:
                 issues.append(f'{p.relative_to(root)}: отсутствует якорь {ref}')
             if ref.startswith('/') and not ref.startswith('//'):

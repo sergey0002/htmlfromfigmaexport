@@ -100,6 +100,9 @@ def compare(reference: str, candidate: str, width: int, height: int, output, thr
                             scrollTo(0,y); await new Promise(r=>setTimeout(r,30));
                         }
                         scrollTo(0,initialY);
+                        // Let scroll handlers and React state updates settle before measuring.
+                        await new Promise(requestAnimationFrame);
+                        await new Promise(requestAnimationFrame);
                     }""")
                     broken = page.locator('img').evaluate_all('(els) => els.filter(i => !i.complete || !i.naturalWidth).map(i => i.currentSrc || i.src)')
                     if broken: warnings.append(f'{name}: не загружены изображения: {broken}')

@@ -78,6 +78,15 @@ class StaticTests(unittest.TestCase):
         self.assertIn('WARN:', out.getvalue())
         self.assertIn('lost.png', out.getvalue())
 
+    def test_fallback_image_files_and_corrupt_svg_warn(self):
+        self.write('index.html', SHELL.format('<span data-image-src="lost.png">fallback</span><img src="broken.svg" alt="">'))
+        self.write('broken.svg', '<svg><![CDATA[unterminated')
+        result = check_site(self.root)
+        self.assertEqual(result['status'], 'INCOMPLETE')
+        self.assertEqual(result['issues'], [])
+        self.assertTrue(any('lost.png' in w for w in result['warnings']))
+        self.assertTrue(any('повреждённый SVG' in w for w in result['warnings']))
+
     def test_blocked_without_site_and_no_false_pass(self):
         self.assertEqual(check_site(self.root)['status'], 'BLOCKED')
         self.assertFalse(loopback_url('http://example.com:80/'))
