@@ -18,3 +18,9 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Local conversion reports and Python environments; source/ remains tracked.
+.work/
+.venv/
+__pycache__/
+*.py[cod]

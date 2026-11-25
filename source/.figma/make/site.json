@@ -1,0 +1,10 @@
+{
+  "description": "Понятно представляет способы покупки недвижимости, условия ипотеки и предложения банков-партнеров в современном удобном формате для покупателей.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
