@@ -1,0 +1,48 @@
+{
+ "cards": [],
+ "staff": [
+  {
+   "cls": "gold-line mt-4",
+   "txt": "",
+   "html": ""
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 ",
+   "txt": "ГЕНЕРАЛЬНЫЙ ДИРЕКТОР |  | Воронин Роман Андреевич |  | info@fbk-target.ru",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Воронин Роман Андреевич\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/general-director-roman-voronin-fbtqSQbz.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65rem;"
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 col-start-1 md:col-start-auto",
+   "txt": "ГЛАВНЫЙ ТРЕНЕР |  | Лобачев Илья Андреевич |  | info@fbk-target.ru",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Лобачев Илья Андреевич\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/sport-director-vasiliy-petukhov-DIXzLzqn.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65rem;"
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 ",
+   "txt": "СТАРШИЙ ТРЕНЕР |  | Исаков Ярослав Андреевич |  | info@fbk-target.ru",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Исаков Ярослав Андреевич\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/senior-coach-yaroslav-isakov-DCzr_LUm.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65rem; "
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 ",
+   "txt": "НАЧАЛЬНИК КОМАНДЫ |  | Сенчук Алексей Михайлович |  | info@fbk-target.ru",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Сенчук Алексей Михайлович\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/head-coach-ilya-lobachev-a2zdmnLx.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65rem; col"
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 ",
+   "txt": "СПОРТИВНЫЙ ДИРЕКТОР |  | Петухов Василий Вячеславович |  | info@fbk-target.ru",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Петухов Василий Вячеславович\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/team-manager-aleksey-senchuk-BI7NhT89.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65r"
+  },
+  {
+   "cls": "card relative overflow-hidden p-0 ",
+   "txt": "АДМИНИСТРАТОР |  | Асылова Надежда Павловна |  | Тел.: +7 913 764 42 84",
+   "html": "<div class=\"relative flex h-48 items-end overflow-hidden\" style=\"border-bottom: 1px solid var(--border);\"><img alt=\"\" class=\"absolute inset-0 z-0 h-full w-full object-cover\" src=\"https://tuba-sticky-11235261.figma.site/assets/target_avatar-DiGgd4V2.jpg\"><img alt=\"Асылова Надежда Павловна\" class=\"absolute inset-0 z-10 h-full w-full object-cover object-top\" src=\"https://tuba-sticky-11235261.figma.site/assets/administrator-nadezhda-asylova-D128d2d9.png\"><div class=\"absolute inset-0 z-20\" style=\"background: linear-gradient(to top, rgba(8, 8, 8, 0.88) 0%, transparent 65%);\"></div></div><div class=\"px-4 py-3\"><div class=\"min-w-0\"><p class=\"section-label mb-1 leading-none\" style=\"font-size: 0.65rem"
+  },
+  {
+   "cls": "card relative overflow-hidden p-3 sm:p-6 ",
+   "txt": "🎯 |  | КОНТЕНТМЕЙКЕР |  | Исакова Вероника Александровна |  | Тел.: +7 913 764 42 84",
+   "html": "<div class=\"w-16 h-16 flex items-center justify-center text-3xl mb-5 rounded-sm overflow-hidden\" style=\"background: var(--gold-dim); border: 1px solid var(--gold-border);\">🎯</div><p class=\"section-label mb-1\" style=\"font-size: 0.65rem; color: var(--text-muted);\">Контентмейкер</p><p class=\"font-display font-semibold text-base leading-tight mb-3\">Исакова Вероника Александровна</p><p style=\"font-size: 0.8rem; color: var(--text-muted);\">Тел.: <span class=\"gold-text font-semibold\">+7 913 764 42 84</span></p><div class=\"absolute top-0 right-0 w-16 h-16\" style=\"background: linear-gradient(135deg, transparent 60%, var(--gold-dim));\"></div>"
+  }
+ ],
+ "tables": [
+  "<table class=\"w-full min-w-xl sm:min-w-full\" style=\"border-collapse: separate; border-spacing: 0px 3px;\"><thead><tr><th class=\"table-header text-left pb-3 pl-4\">#</th><th class=\"table-header w-28 max-w-28 text-left pb-3 sm:w-auto sm:max-w-none\">Команда</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">И</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">В</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">ВО</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">Н</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">ПО</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">П</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">ГЗ</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">ГП</th><th class=\"table-header px-3 pb-3 text-center sm:px-2\">О</th></tr></thead><tbody><tr style=\"background: var(--bg-card); border: 1px solid transparent;\"><td class=\"pl-4 py-3 font-display font-bold\" style=\"color: var(--gold);\">1</td><td class=\"w-28 max-w-28 py-3 pr-2 sm:w-auto sm:max-w-none sm:pr-4\"><div class=\"flex items-center gap-2\"><span class=\"min-w-0 break-words leading-tight font-semibold text-sm\">Невская дружина</span></div></td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">3</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">3</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">24</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">5</td><td class=\"px-3 py-3 text-center font-display font-bold sm:px-2\" style=\"color: white; font-size: 1rem;\">9</td></tr><tr style=\"background: var(--bg-card); border: 1px solid transparent;\"><td class=\"pl-4 py-3 font-display font-bold\" style=\"color: var(--gold);\">2</td><td class=\"w-28 max-w-28 py-3 pr-2 sm:w-auto sm:max-w-none sm:pr-4\"><div class=\"flex items-center gap-2\"><span class=\"min-w-0 break-words leading-tight font-semibold text-sm\">Спартак</span></div></td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">3</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">3</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">0</td><td class=\"px-3 py-3 text-center text-sm sm:px-2\" style=\"color: var(--text-muted);\">10"
+ ]
+}

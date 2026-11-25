@@ -1,0 +1,11 @@
+{
+  "title": "ФБК Таргет",
+  "description": "Provides floorball team players and fans with up-to-date news, match schedules, stats, roster info, and club history in a sleek sports design.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
