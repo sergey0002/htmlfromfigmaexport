@@ -1,284 +1,176 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-const base = 'https://em-nsk.ru';
-const focus = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-4';
-const banks = [
-  ['sber.jpg', 'Сбербанк'], ['vtb.jpg', 'ВТБ'],
-  ['gazprom.jpg', 'Газпромбанк'], ['domrf.jpg', 'Банк ДОМ.РФ'],
-  ['otkritie.jpg', 'Открытие'], ['absolut.jpg', 'Абсолют Банк'],
-  ['uralsib.png', 'Уралсиб'], ['roskap.jpg', 'Российский капитал'],
+const site = 'https://xn--m1acsa.xn--p1ai';
+const focus = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1479bb] focus-visible:ring-offset-4';
+const documents = [
+  {
+    id: '01',
+    title: 'Политика обработки персональных данных',
+    description: 'Ознакомьтесь с порядком обработки и защиты ваших персональных данных.',
+    audience: 'Для всех участников',
+    file: 'politic.pdf',
+    note: 'Для ознакомления',
+  },
+  {
+    id: '02',
+    title: 'Согласие на обработку персональных данных',
+    description: 'Скачайте, заполните и подпишите согласие, если вам уже исполнилось 18 лет.',
+    audience: 'Совершеннолетним игрокам',
+    file: 'agreement_adult.pdf',
+    note: 'Заполнить и подписать',
+  },
+  {
+    id: '03',
+    title: 'Согласие законного представителя на обработку персональных данных',
+    description: 'Для игроков младше 18 лет согласие заполняет и подписывает законный представитель.',
+    audience: 'Родителям и представителям',
+    file: 'agreement_junior.pdf',
+    note: 'Заполнить и подписать',
+  },
 ];
-const options = [
-  { id: 'installment', label: 'Рассрочка' },
-  { id: 'mortgage', label: 'Ипотека' },
-  { id: 'capital', label: 'Материнский капитал' },
-  { id: 'military', label: 'Военная ипотека' },
-  { id: 'tradein', label: 'Трейд-ин' },
+const links = [
+  ['О федерации', '/about/'],
+  ['Турниры', '/tournaments/'],
+  ['Команды', '/teams2/'],
+  ['Медиа', '/events/'],
+  ['Контакты', '/contacts/'],
 ];
 
 function Icon({ name, className = '' }: { name: string; className?: string }) {
   const paths: Record<string, React.ReactNode> = {
-    arrow: <><path d="M5 12h14M13 6l6 6-6 6" /></>,
-    diagonal: <><path d="M6 18 18 6M6 6h12v12" /></>,
-    home: <><path d="m3 10 9-7 9 7v11H3zM9 21v-8h6v8" /></>,
-    calendar: <><rect x="4" y="5" width="16" height="16" rx="2" /><path d="M8 3v5m8-5v5M4 11h16m-11 4h2m2 0h2m-6 3h2" /></>,
-    bank: <><path d="m3 8 9-5 9 5H3Zm2 3v7m7-7v7m7-7v7M3 21h18" /></>,
-    family: <><circle cx="8" cy="7" r="3" /><circle cx="17" cy="9" r="2" /><path d="M2 21v-4a6 6 0 0 1 12 0v4m2-8a5 5 0 0 1 6 5v3" /></>,
-    shield: <><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z" /><path d="m8 12 3 3 5-6" /></>,
-    exchange: <><path d="M4 8h15l-4-4M20 16H5l4 4M4 8v5m16 3v-5" /></>,
-    phone: <path d="m7 3 3 5-3 3a16 16 0 0 0 6 6l3-3 5 3c-1 6-6 4-10 2S3 12 3 7c0-3 2-4 4-4Z" />,
-    plus: <path d="M5 12h14m-7-7v14" />,
+    file: <><path d="M14 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9Z" /><path d="M14 2v7h7M7 13h10M7 17h7" /></>,
+    download: <><path d="M12 3v12m-5-5 5 5 5-5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" /></>,
+    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
+    external: <><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /></>,
+    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6m0-10v1" /></>,
+    check: <path d="m5 12 4 4L19 6" />,
+    pin: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
+    menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+    pen: <><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z" /><path d="M13 21h8" /></>,
   };
-  return <svg className={`h-6 w-6 shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] || paths.arrow}</svg>;
+  return <svg className={`h-5 w-5 shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] || paths.file}</svg>;
 }
 
-function Image({ src, alt, className }: { src: string; alt: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  return failed
-    ? <span className="flex items-center gap-2 text-sm font-semibold"><Icon name="bank" />{alt}</span>
-    : <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+function Logo() {
+  const [error, setError] = useState(false);
+  return error
+    ? <span className="flex items-center gap-3 text-white"><Icon name="file" /><span className="text-sm font-bold">НОВОСИБИРСКАЯ ОБЛАСТНАЯ<br />ФЕДЕРАЦИЯ ФЛОРБОЛА</span></span>
+    : <img src="/images/federation-logo.png" width="240" height="53" alt="Новосибирская областная федерация флорбола" onError={() => setError(true)} className="h-auto w-[240px] max-w-full" />;
 }
 
-function ContactLink({ children = 'Получить консультацию', light = false }: { children?: React.ReactNode; light?: boolean }) {
-  return <a href="#consultation" className={`group inline-flex min-h-11 items-center justify-between gap-5 text-sm font-medium ${light ? 'text-white' : 'text-[#e30613]'} ${focus}`}>
-    {children}<Icon name="arrow" className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transform-none" />
-  </a>;
-}
-
-function SmallCard({ id, number, icon, title, description, children }: {
-  id: string; number: string; icon: string; title: string; description: string; children: React.ReactNode;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  return <article id={id} className="group flex scroll-mt-8 flex-col rounded-lg border border-[#e8e8e8] bg-white p-7 transition duration-300 hover:border-red-200 hover:shadow-lg hover:shadow-black/4 motion-reduce:transition-none lg:p-8">
-    <div className="mb-7 flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2f2] text-[#e30613]"><Icon name={icon} /></span><span className="text-sm text-neutral-500">/ {number}</span></div>
-    <h2 className="mb-4 max-w-72 text-2xl font-semibold leading-tight">{title}</h2>
-    <p className="mb-6 text-sm leading-relaxed text-neutral-600">{description}</p>
-    {expanded && <div className="mb-5 border-t border-neutral-200 pt-5 text-sm leading-relaxed text-neutral-600">{children}</div>}
-    <button onClick={() => setExpanded(!expanded)} aria-expanded={expanded} className={`mt-auto flex min-h-11 items-center justify-between border-t border-neutral-200 pt-4 text-left text-sm font-medium ${focus}`}>
-      {expanded ? 'Свернуть' : 'Подробнее об условиях'}<Icon name="plus" className={`text-[#e30613] transition-transform duration-300 ${expanded ? 'rotate-45' : ''}`} />
-    </button>
-  </article>;
-}
-
-const companyLinks = [
-  ['Контакты', '/contact/'], ['Сданные объекты', '/portfolio/'],
-  ['Партнерская программа', '/reg'], ['История', '/about'],
-  ['Миссия', '/mission'], ['Знак компании', '/symbol'],
-  ['Вакансии', '/ads'], ['Документы', '/doc'],
-  ['Служба клиентского сервиса', '/feedback.php'],
-];
-const propertyLinks = [
-  ['Квартиры', '/catalog'], ['Парковки', '/parking/'],
-  ['Способы покупки', '/sposob'], ['Акции', '/actions'],
-  ['Квартиры со стилем', '/remont'],
-];
-const topLinks = [
-  ['О компании', '/about'], ['Миссия', '/mission'],
-  ['Пресс-центр', '/media'], ['Контакты', '/contact'], ['Карта проектов', '/map'],
-];
-const pressLinks = [
-  ['Фотоальбом', '/media/#foto'], ['Видео', '/media/#video'],
-  ['Газета «Калининский родник»', '/media/#rodnik'],
-];
-const maxContact = 'https://max.ru/u/f9LHodD0cOLt4Wmw4kICkJra993QCbOhidJG1q49Mu8lMLkKI33obmY4vIg';
-
-function SiteLink({ href, children, className = '' }: {
-  href: string; children: React.ReactNode; className?: string;
-}) {
-  return <a href={href.startsWith('/') ? base + href : href} className={`transition-colors hover:text-[#e30613] ${focus} ${className}`}>{children}</a>;
-}
-
-function SocialLinks({ footer = false }: { footer?: boolean }) {
-  const links = footer ? [
-    ['vk.svg', 'ВКонтакте', 'https://vk.com/emnsk'],
-    ['tg-2.svg', 'Telegram', 'https://t.me/energomontazh_nsk'],
-    ['ok.svg', 'Одноклассники', 'https://ok.ru/group/52030414454992'],
-    ['max.svg', 'MAX', 'https://max.ru/id2225191580_biz'],
-  ] : [
-    ['tg.svg', 'Telegram', 'https://t.me/+79132679200'],
-    ['mlogo.png', 'MAX', maxContact],
-  ];
-  return <div className={footer ? 'grid grid-cols-2 gap-4 self-start' : 'flex items-center gap-2 lg:gap-3'}>
-    {links.map(([file, name, url]) => <a key={file} href={url} target="_blank" rel="noopener noreferrer" aria-label={name} className={`flex h-11 w-11 shrink-0 items-center justify-center ${focus}`}>
-      <Image src={`/images/site/${file}`} alt={name} className="h-[35px] w-[35px] object-contain" />
-    </a>)}
-  </div>;
-}
-
-function SiteHeader() {
-  const [menu, setMenu] = useState(false);
-  const [compact, setCompact] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 80);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return <header className="sticky top-0 z-30 bg-white text-black">
-    <div className="relative shadow-[0_1px_24px_8px_rgba(0,0,0,0.1)]">
-      <div className="mx-auto flex min-h-11 max-w-[1416px] items-center justify-between gap-2 px-4 md:px-12 lg:px-[15px]">
-        <button onClick={() => setMenu(!menu)} aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} aria-controls="site-mobile-menu" className={`flex min-h-11 items-center gap-2 text-base font-semibold md:text-xl lg:hidden ${focus}`}>
-          <Image src="/images/site/burger.svg" alt="" className="h-7 w-7 md:h-11 md:w-11" />Меню
-        </button>
-        <nav aria-label="О компании" className="hidden items-center gap-2.5 text-sm lg:flex xl:gap-4">
-          {topLinks.map(([label, href]) => <SiteLink key={href} href={href} className="flex min-h-11 items-center whitespace-nowrap">{label}</SiteLink>)}
-          <SiteLink href="/sign_up_key/" className="flex min-h-11 items-center"><span className="rounded-[17px] border border-[#e30613] px-2.5 py-1 text-xs">Новосёлам</span></SiteLink>
-        </nav>
-        <div className="hidden items-center gap-[19px] lg:flex">
-          <SiteLink href="/feedback.php" className="flex min-h-11 items-center"><span className="rounded-[17px] bg-[#26b99a] px-3 py-1 text-sm font-semibold text-[#102e27]">Служба клиентского сервиса</span></SiteLink>
-          <SiteLink href="https://em.m2profi.pro/sahmatka/user.php" className="flex min-h-11 items-center"><span className="min-w-[132px] rounded-[17px] bg-[#e30613] px-3 py-1 text-center text-sm font-semibold text-white xl:min-w-[162px]">Агентствам</span></SiteLink>
+function DocumentCard({ document }: { document: typeof documents[number] }) {
+  const [downloaded, setDownloaded] = useState(false);
+  return (
+    <article className="group flex min-w-0 flex-col rounded-2xl border border-[#d9e3e9] bg-white p-6 transition-all duration-300 hover:border-[#8ba9bb] hover:shadow-[0_12px_30px_-14px_#01345040] motion-safe:hover:-translate-y-1 lg:p-7">
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#edf3f7] transition-colors group-hover:bg-[#dde9f0]">
+          <Icon name="file" className="h-7 w-7 transition-transform motion-safe:group-hover:-rotate-6" />
         </div>
-        <SiteLink href="tel:+73833474700" className="ml-auto whitespace-nowrap text-sm font-semibold md:hidden">+ 7 (383) 347-47-00</SiteLink>
-        <div className="lg:hidden"><SocialLinks /></div>
+        <span className="pt-1 text-xs font-medium tracking-wider text-slate-600">PDF <span className="mx-2 text-slate-600">/</span> {document.id}</span>
       </div>
-    </div>
-    <div className={`mx-auto flex max-w-[1416px] items-center justify-between gap-3 px-4 transition-[padding] duration-150 motion-reduce:transition-none md:gap-10 md:px-12 lg:gap-8 lg:px-[15px] ${compact ? 'py-2.5' : 'py-[19px] md:py-[30px] lg:py-6'}`}>
-      <SiteLink href="/" className="w-[92px] shrink-0 md:w-[156px] lg:w-[116px]"><Image src="/images/logo.svg" alt="Энергомонтаж" className="w-full" /></SiteLink>
-      <nav aria-label="Выбор недвижимости" className="flex min-w-0 items-center gap-3">
-        <SiteLink href="/projects/" className="flex min-h-11 shrink-0 items-center"><span className="whitespace-nowrap rounded-[17px] border-2 border-[#e30613] px-2.5 py-1 text-sm font-semibold leading-none md:px-5 md:text-base lg:px-2.5 lg:text-sm xl:px-5 xl:text-base">Выбрать недвижимость</span></SiteLink>
-        <ul className="hidden items-center gap-3 text-sm lg:flex xl:gap-[15px] xl:text-base">
-          {propertyLinks.map(([label, href]) => <li key={href}><SiteLink href={href} className="flex min-h-11 items-center whitespace-nowrap">{label}</SiteLink></li>)}
-        </ul>
-      </nav>
-      <div className="ml-auto hidden shrink-0 items-center gap-[17px] md:flex">
-        <SiteLink href="tel:+73833474700" className="flex min-h-11 items-center whitespace-nowrap text-xl font-semibold lg:text-sm xl:text-xl">+ 7 (383) 347-47-00</SiteLink>
-        <div className="hidden min-[1400px]:block"><SocialLinks /></div>
+      <span className="mb-3 text-xs font-semibold text-[#426379]">{document.audience}</span>
+      <h3 className="mb-4 text-lg leading-[1.4] font-bold">{document.title}</h3>
+      <p className="mb-6 text-sm leading-[1.75] text-slate-600">{document.description}</p>
+      <div className="mt-auto">
+        <div className="mb-5 flex items-center gap-2 border-t border-[#e6edf1] pt-4 text-xs font-medium">
+          <span className={`h-1.5 w-1.5 rounded-full ${document.id === '01' ? 'bg-[#1479bb]' : 'bg-[#e30613]'}`} />
+          {document.note}
+        </div>
+        <a href={`/documents/${document.file}`} download onClick={() => setDownloaded(true)} className={`flex min-h-12 items-center justify-center gap-3 rounded-[10px] bg-[#013450] px-4 text-sm font-bold text-white transition-colors hover:bg-[#1479bb] active:scale-[.98] motion-reduce:transform-none ${focus}`}>
+          <Icon name={downloaded ? 'check' : 'download'} />
+          {downloaded ? 'Скачать ещё раз' : 'Скачать документ'}
+        </a>
+        <a href={`/documents/${document.file}`} target="_blank" rel="noreferrer" className={`mt-2 flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#edf3f7] ${focus}`}>
+          Открыть документ <Icon name="external" className="h-4 w-4" />
+        </a>
       </div>
-    </div>
-    {menu && <nav id="site-mobile-menu" aria-label="Меню сайта" className="max-h-[65vh] overflow-y-auto border-t border-[#f7e8e8] px-4 py-6 md:px-12 lg:hidden">
-      <div className="grid gap-x-8 md:grid-cols-2">
-        {[...propertyLinks, ...topLinks, ['Новосёлам', '/sign_up_key/'], ['Служба клиентского сервиса', '/feedback.php'], ['Агентствам', 'https://em.m2profi.pro/sahmatka/user.php']].map(([label, href]) => <SiteLink key={`${label}-${href}`} href={href} className="flex min-h-11 items-center border-b border-[#f7e8e8] text-base">{label}</SiteLink>)}
-      </div>
-    </nav>}
-  </header>;
-}
-
-function FooterGroup({ title, href, links }: { title: string; href: string; links: string[][] }) {
-  return <div className="min-w-0">
-    <SiteLink href={href} className="inline-flex min-h-11 items-center text-base font-semibold uppercase leading-tight text-[#161616]">{title}</SiteLink>
-    <ul className="flex flex-col">
-      {links.map(([label, url]) => <li key={`${label}-${url}`}><SiteLink href={url} className="inline-flex min-h-11 items-center text-sm leading-relaxed text-[#6b6b6b]">{label}</SiteLink></li>)}
-    </ul>
-  </div>;
-}
-
-function SiteFooter() {
-  return <footer className="bg-[#f7e8e8] pb-[60px] pt-[25px] md:py-8 lg:pb-[30px] lg:pt-14">
-    <div className="mx-auto max-w-[1218px] px-4 md:px-12 lg:px-[15px]">
-      <div className="grid grid-cols-2 gap-x-6 pb-10 lg:grid-cols-[1.2fr_1fr] lg:pb-7">
-        <div className="col-span-2 mb-8 flex flex-col gap-6 border-b border-[#e30613] pb-7 lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:mb-0 lg:mt-5 lg:border-0 lg:pb-0">
-          <SiteLink href="/" className="w-[116px]"><Image src="/images/logo.svg" alt="Энергомонтаж" className="w-full" /></SiteLink>
-          <p className="text-xs font-medium leading-tight text-[#6b6b6b]">© Группа компаний «Энергомонтаж»</p>
-        </div>
-        <div className="flex min-w-0 flex-col gap-6 md:gap-10 lg:col-start-1 lg:row-start-1 lg:flex-row lg:justify-between lg:gap-6">
-          <FooterGroup title="Проекты" href="/projects/" links={[
-            ['Атом', '/projects/atom'], ['Династия', '/projects/dynasty/'],
-            ['Приозерный', '/projects/priozerny/'], ['Infinity', '/projects/infinity/'],
-          ]} />
-          <FooterGroup title="Выбрать недвижимость" href="/catalog/" links={[
-            ['Квартиры', '/catalog/'], ['Парковки', '/parking/'], ['Коммерческие помещения', '/commerce/'],
-          ]} />
-          <div className="flex min-w-0 flex-col gap-1">
-            {[['Офисы продаж', '/contact/'], ['Способы покупки', '/sposob'], ['АКЦИИ', '/actions/']].map(([label, href]) => <SiteLink key={href} href={href} className="inline-flex min-h-11 items-center text-base font-semibold uppercase leading-tight text-[#161616]">{label}</SiteLink>)}
-          </div>
-        </div>
-        <div className="flex min-w-0 flex-col gap-6 md:flex-row lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <FooterGroup title="О компании" href="/about" links={companyLinks} />
-          <div className="flex min-w-0 flex-col gap-7 md:max-w-[197px]">
-            <FooterGroup title="Пресс-Центр" href="/media/" links={pressLinks} />
-            <SocialLinks footer />
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col justify-between gap-6 border-t border-[#e30613] pt-[19px] md:flex-row">
-        <div className="flex max-w-[755px] flex-col gap-7 md:gap-[47px]">
-          <div className="text-xs font-medium leading-tight text-[#6b6b6b]">
-            <SiteLink href="/content/sitedoc/agreement.docx" className="inline-flex min-h-11 items-center">Согласие на обработку персональных данных</SiteLink><br />
-            <SiteLink href="/content/sitedoc/politic.docx" className="inline-flex min-h-11 items-center">Политика обработки персональных данных</SiteLink>
-          </div>
-          <p className="text-xs font-medium leading-tight text-[#6b6b6b]">Любая информация, представленная на данном сайте, носит исключительно информационный характер и ни при каких условиях не является публичной офертой, определяемой положениями статьи 437 ГК РФ.</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-start text-xs font-medium leading-tight text-[#6b6b6b] md:max-w-[290px] md:items-end md:text-right">
-          <p>Разработка и поддержка сайта:</p>
-          <SiteLink href="https://m2profi.pro" className="flex min-h-11 items-center gap-1.5"><Image src="/images/site/m2.svg" alt="" className="h-[15px] w-[21px] shrink-0" /><span>ООО «М2».<br />Разработка и внедрение IT-продуктов.</span></SiteLink>
-          <SiteLink href="https://stalker.group" className="flex min-h-11 items-center gap-1.5"><Image src="/images/site/stalker.svg" alt="" className="h-[18px] w-[17px] shrink-0" /><span>ООО «Сталкер».<br />Проводник в маркетинговых коммуникациях.</span></SiteLink>
-        </div>
-      </div>
-    </div>
-  </footer>;
+    </article>
+  );
 }
 
 export default function App() {
-  const [active, setActive] = useState('');
-  return <div className="min-h-screen overflow-x-hidden bg-white font-sans text-[#202020] selection:bg-red-100">
-    <SiteHeader />
-
-    <main id="purchase" className="mx-auto max-w-[1188px] px-6 pb-20 lg:px-10">
-      <div className="flex items-center gap-3 pt-8 text-xs text-neutral-600"><a href={base} className={`min-h-11 content-center hover:text-red-600 ${focus}`}>Главная</a><span>/</span><span>Способы покупки</span></div>
-      <section className="relative pb-10 pt-7 md:pt-10">
-        <div className="mb-5 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-[#e30613]"><span className="h-px w-8 bg-[#e30613]" />Ближе к своей квартире</div>
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <h1 className="text-[38px] font-semibold uppercase leading-[1.08] tracking-[-0.025em] md:text-[56px] lg:text-[64px]">Как купить<br />квартиру<span className="text-[#e30613]">.</span></h1>
-          <p className="max-w-[390px] pb-1 text-base leading-relaxed text-neutral-600">Планы у всех разные. Квартира — своя.<br className="hidden md:block" /> Выберите удобный способ покупки,<br className="hidden md:block" /> а мы поможем на каждом этапе.</p>
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-white font-sans text-[#013450]">
+      <header className="z-20 bg-[#013450] text-white">
+        <div className="mx-auto flex min-h-[88px] max-w-[1280px] items-center justify-between gap-5 px-5 py-4 md:px-12">
+          <a href={site} aria-label="На главную" className={`shrink-0 rounded-sm ${focus}`}><Logo /></a>
+          <nav aria-label="Основная навигация" className="hidden items-center gap-1 xl:flex">
+            {links.map(([label, url]) => <a key={url} href={site + url} className={`flex min-h-11 items-center whitespace-nowrap rounded-sm px-3 text-sm font-bold uppercase transition-colors hover:bg-[#1479bb] ${focus}`}>{label}</a>)}
+            <a href="#documents" aria-current="page" className={`ml-3 flex min-h-11 items-center rounded-full bg-[#e30613] px-5 text-sm font-bold uppercase hover:bg-[#b70510] ${focus}`}>Согласия</a>
+          </nav>
+          <a href="https://vk.com/floorballnsk" target="_blank" rel="noreferrer" aria-label="Федерация ВКонтакте" className={`hidden min-h-11 min-w-11 items-center justify-center text-xl font-extrabold xl:flex ${focus}`}>ᴠκ</a>
+          <button aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={() => setMenuOpen(!menuOpen)} className={`flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/40 xl:hidden ${focus}`}><Icon name={menuOpen ? 'close' : 'menu'} /></button>
         </div>
-      </section>
+        {menuOpen && <nav id="mobile-menu" aria-label="Мобильная навигация" className="border-t border-white/20 px-5 pb-5 xl:hidden">
+          {links.map(([label, url]) => <a key={url} href={site + url} className={`flex min-h-12 items-center text-sm font-bold uppercase ${focus}`}>{label}</a>)}
+          <a href="#documents" onClick={() => setMenuOpen(false)} className={`flex min-h-12 items-center text-sm font-bold uppercase ${focus}`}>Согласия</a>
+        </nav>}
+      </header>
 
-      <nav aria-label="Способы покупки" className="mb-10 flex flex-wrap gap-2 border-b border-neutral-200 pb-8">
-        {options.map((item, i) => <a key={item.id} href={`#${item.id}`} onClick={() => setActive(item.id)} className={`group inline-flex min-h-11 items-center gap-3 rounded-full border px-5 text-sm transition-colors duration-200 ${focus} ${active === item.id ? 'border-[#e30613] bg-[#e30613] text-white' : 'border-neutral-200 bg-white hover:border-[#e30613] hover:text-[#e30613]'}`}><span className={active === item.id ? 'text-white' : 'text-neutral-500'}>0{i + 1}</span>{item.label}</a>)}
-      </nav>
+      <main className="mx-auto w-full max-w-[1280px] flex-1 px-5 pt-10 pb-16 md:px-12 md:pt-[60px] md:pb-20">
+        <div className="mb-8 flex items-center gap-2.5 text-xs text-slate-600">
+          <a href={site} className={`flex min-h-11 items-center hover:text-[#1479bb] ${focus}`}>Главная</a>
+          <span>/</span><span>Согласия</span>
+        </div>
+        <div className="mb-8 max-w-[950px]">
+          <div className="mb-4 inline-flex items-center rounded-full bg-[#edf3f7] px-3 py-1.5 text-xs font-semibold text-[#013450]">Сезон 2026/2027</div>
+          <h1 className="text-[28px] leading-[1.15] font-bold uppercase md:text-[40px]">Согласия на обработку<br className="hidden md:block" /> персональных данных</h1>
+          <p className="mt-5 max-w-[830px] text-base leading-[1.8] text-slate-600">Ознакомьтесь с документами, скачайте подходящее согласие и передайте подписанный экземпляр в Новосибирскую областную федерацию флорбола.</p>
+        </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <article id="installment" className="relative flex scroll-mt-8 flex-col overflow-hidden rounded-lg bg-[#f5f5f5] p-7 lg:p-8">
-          <div className="mb-8 flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#e30613]"><Icon name="calendar" /></span><span className="text-sm text-neutral-500">/ 01</span></div>
-          <h2 className="text-[28px] font-semibold">Рассрочка</h2>
-          <p className="mb-7 mt-3 text-sm leading-relaxed text-neutral-600">Квартира сейчас —<br />оплата в удобном ритме.</p>
-          <div className="mb-8 grid grid-cols-2 gap-4 border-y border-neutral-300 py-5">
-            <div><div className="text-[35px] font-medium leading-tight">от 30<span className="text-xl">%</span></div><p className="mt-2 text-xs text-neutral-600">первоначальный взнос</p></div>
-            <div className="border-l border-neutral-300 pl-5"><div className="text-[35px] font-medium leading-tight">от 3<span className="ml-1 text-lg">мес.</span></div><p className="mt-2 text-xs text-neutral-600">срок рассрочки</p></div>
+        <section aria-label="Важная информация" className="mb-10 flex items-start gap-4 rounded-r-xl border-l-[3px] border-[#e30613] bg-[#f5f7f9] px-5 py-5 md:gap-5 md:px-6">
+          <Icon name="info" className="mt-0.5 h-6 w-6 text-[#c80917]" />
+          <div>
+            <h2 className="mb-2 text-base font-bold">Без оформленного согласия участие в турнирах невозможно</h2>
+            <p className="max-w-[1000px] text-sm leading-[1.8] text-slate-600">Игроки, не предоставившие заполненное и подписанное согласие, не допускаются к турнирам под эгидой федерации. За несовершеннолетних игроков согласие заполняют и подписывают их законные представители.</p>
           </div>
-          <p className="mb-7 text-sm leading-relaxed text-neutral-600">График и суммы платежей обсуждаем индивидуально — с учётом ваших возможностей.</p>
-          <div className="mt-auto"><ContactLink>Узнать условия</ContactLink></div>
-        </article>
+        </section>
 
-        <article id="mortgage" className="scroll-mt-8 rounded-lg border border-[#e8e8e8] p-7 lg:col-span-2 lg:p-8">
-          <div className="mb-6 flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2f2] text-[#e30613]"><Icon name="bank" /></span><span className="rounded-full bg-[#f5f5f5] px-3 py-1.5 text-xs text-neutral-600">/ 02</span></div>
-          <div className="flex flex-wrap items-start justify-between gap-4"><h2 className="max-w-[340px] text-[28px] font-semibold leading-tight">Ипотека ведущих<br className="hidden md:block" /> банков <span className="text-[#e30613]">от 6%</span></h2><span className="rounded-full border border-red-200 px-3 py-1.5 text-xs text-[#c30511]">По 214-ФЗ</span></div>
-          <p className="mb-6 mt-4 max-w-[620px] text-sm leading-relaxed text-neutral-600">Подберём индивидуальные условия кредитования, поможем с документами и поддержим на всех этапах оформления ипотеки.</p>
-          <div className="mb-3 flex items-center justify-between"><h3 className="text-xs font-medium uppercase tracking-wider text-neutral-600">Наши банки-партнёры</h3><span className="text-xs text-neutral-600">{String(banks.length).padStart(2, '0')} банков</span></div>
-          <div className="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <section id="documents" aria-labelledby="documents-title" className="scroll-mt-6">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h2 id="documents-title" className="text-xl font-bold uppercase md:text-2xl">Документы для скачивания</h2>
+            <span className="whitespace-nowrap text-xs font-medium text-slate-600">3 документа · PDF</span>
+          </div>
+          <div className="grid items-stretch gap-5 md:grid-cols-3">{documents.map(document => <DocumentCard key={document.id} document={document} />)}</div>
+          <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-600"><Icon name="info" className="mt-0.5 h-4 w-4" />Согласия заполняются на бумаге. Отправлять персональные данные через сайт не требуется.</p>
+        </section>
+
+        <section aria-labelledby="steps-title" className="mt-12 rounded-2xl bg-[#edf3f7] p-6 md:mt-14 md:p-8">
+          <h2 id="steps-title" className="mb-7 text-xl font-bold uppercase md:text-2xl">Как передать согласие</h2>
+          <div className="grid gap-7 md:grid-cols-3 md:gap-8">
             {[
-              ['sber.svg', 'Сбербанк'],
-              ['vtb.svg', 'ВТБ'],
-              ['alfa.svg', 'Альфа-Банк'],
-              ['domrf.svg', 'Банк ДОМ.РФ'],
-              ['akcept.svg', 'Банк Акцепт'],
-              ['levoberezhny.svg', 'Банк Левобережный'],
-              ['psb.svg', 'ПСБ'],
-              ['bspb.png', 'Банк Санкт-Петербург'],
-            ].map(([file, name]) => <div key={file} className="flex h-[70px] items-center justify-center rounded border border-neutral-200 bg-white px-3 py-2 transition duration-300 hover:-translate-y-1 hover:border-red-300 hover:shadow-sm motion-reduce:transform-none"><Image src={`/images/partners/${file}`} alt={name} className={`h-full w-full object-contain${['vtb.svg', 'psb.svg', 'bspb.png'].includes(file) ? ' scale-80' : ''}`} /></div>)}
+              ['01', 'download', 'Скачайте документ', 'Ознакомьтесь с политикой и выберите согласие для себя или несовершеннолетнего игрока.'],
+              ['02', 'pen', 'Заполните и подпишите', 'Распечатайте согласие, заполните все необходимые поля и поставьте личную подпись.'],
+              ['03', 'pin', 'Передайте в федерацию', 'Принесите оригинал лично в приёмные часы или передайте в секретариат на любом турнире федерации.'],
+            ].map(([number, icon, title, text]) => <div key={number} className="min-w-0">
+              <div className="mb-4 flex items-center gap-3"><span className="text-xs font-bold text-[#426379]">{number}</span><span className="h-px flex-1 bg-[#ccdbe4]" /><Icon name={icon} /></div>
+              <h3 className="mb-2 text-base font-bold">{title}</h3>
+              <p className="text-sm leading-[1.8] text-slate-600">{text}</p>
+            </div>)}
           </div>
-          <ContactLink>Подобрать ипотечную программу</ContactLink>
-        </article>
+          <div className="mt-7 flex flex-col items-start justify-between gap-3 border-t border-[#ccdbe4] pt-5 md:flex-row md:items-center">
+            <p className="text-sm text-slate-600">Адрес и приёмные часы уточняйте у федерации.</p>
+            <a href={`${site}/contacts/`} className={`flex min-h-11 items-center gap-3 rounded text-sm font-bold hover:text-[#1479bb] ${focus}`}>Контакты федерации <Icon name="arrow" /></a>
+          </div>
+        </section>
+      </main>
 
-        <SmallCard id="capital" number="03" icon="family" title="Материнский капитал" description="Используйте материнский капитал для частичного погашения ипотечного кредита — основного долга и процентов.">
-          Оформите ипотеку, соберите пакет документов и подайте заявление в Социальный фонд России. После регистрации договора средства будут перечислены в банк. Это позволит уменьшить срок кредита или ежемесячный платёж.
-        </SmallCard>
-        <SmallCard id="military" number="04" icon="shield" title="Военная ипотека" description="Новая квартира для вашей семьи на специальных условиях. Больше пространства и всё для комфортной жизни рядом.">
-          Рассмотрите наши микрорайоны «Родники» и «Приозерный» с развитой инфраструктурой Калининского района. Условия участия и доступные квартиры уточняйте в отделе продаж.
-        </SmallCard>
-        <SmallCard id="tradein" number="05" icon="exchange" title="Квартира в трейд-ин" description="Переезжайте в новое, не откладывая планы. Поможем продать вашу недвижимость и зачесть её стоимость в счёт покупки.">
-          Не нужно искать покупателя самостоятельно: мы поможем организовать продажу вашей недвижимости. Индивидуальный расчёт и консультацию можно получить в офисе продаж.
-        </SmallCard>
-      </div>
-
-      <section id="consultation" className="relative mt-10 flex scroll-mt-8 flex-col justify-between gap-8 overflow-hidden rounded-lg bg-[#e30613] p-8 text-white md:flex-row md:items-center lg:p-11">
-        <div className="pointer-events-none absolute -right-14 -top-28 h-96 w-96 rounded-full border border-white/20" aria-hidden="true" />
-        <div className="pointer-events-none absolute -right-1 -top-16 h-72 w-72 rounded-full border border-white/20" aria-hidden="true" />
-        <div className="relative"><p className="mb-3 text-xs uppercase tracking-[0.15em]">Ваш следующий шаг</p><h2 className="mb-3 text-3xl font-medium md:text-[36px]">Найдём ваш способ покупки</h2><p className="max-w-lg text-sm leading-relaxed">Расскажем об условиях, ответим на вопросы<br className="hidden md:block" /> и поможем сделать первый шаг к новой квартире.</p></div>
-        <div className="relative shrink-0"><a href="tel:+73833474700" className={`group flex min-h-14 items-center justify-center gap-6 rounded bg-white px-6 text-sm font-medium text-[#202020] transition-colors hover:bg-red-50 ${focus}`}><Icon name="phone" />+7 (383) 347-47-00<Icon name="diagonal" /></a><p className="mt-3 text-center text-xs">Консультация отдела продаж</p></div>
-      </section>
-      <p className="mt-5 max-w-4xl text-xs leading-relaxed text-neutral-600">Условия покупки и кредитования уточняйте в отделе продаж. Решение о предоставлении кредита принимает банк. Информация на сайте не является публичной офертой.</p>
-    </main>
-    <SiteFooter />
-  </div>;
+      <footer className="bg-[#013450] py-10 text-white md:py-[45px]">
+        <div className="mx-auto grid max-w-[1280px] gap-8 px-5 md:px-12 lg:grid-cols-[260px_1fr_280px] lg:gap-10">
+          <a href={site} aria-label="На главную" className={`self-start rounded-sm lg:border-r lg:border-white/30 lg:pr-7 ${focus}`}><Logo /></a>
+          <div className="text-sm leading-[1.7] lg:border-r lg:border-white/30 lg:pr-8">
+            <p className="mb-3 font-semibold">Разработка и поддержка сайта:</p>
+            <a href="https://m2profi.pro" className={`mb-2 block hover:underline ${focus}`}>ООО «М2». Разработка и внедрение IT-продуктов.</a>
+            <a href="https://stalker.expert" className={`block hover:underline ${focus}`}>ООО «Сталкер». Проводник в маркетинговых коммуникациях.</a>
+          </div>
+          <div className="flex flex-col items-start gap-2 text-sm leading-[1.7]">
+            <a href={`${site}/contacts/`} className={`flex min-h-11 items-center hover:underline ${focus}`}>Контактная информация</a>
+            <a href="/documents/politic.pdf" target="_blank" rel="noreferrer" className={`flex min-h-11 items-center hover:underline ${focus}`}>Политика обработки<br />персональных данных</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }
