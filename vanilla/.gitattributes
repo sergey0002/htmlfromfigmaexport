@@ -1,4 +1,0 @@
-# Small, self-hosted fonts and favicon are part of the deployable static site.
-# Store these specific assets in Git so checkout/deployment does not need LFS.
-/fonts/exo-2-*-normal.woff2 -filter -diff -merge -text
-/favicon.png -filter -diff -merge -text
