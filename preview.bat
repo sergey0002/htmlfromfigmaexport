@@ -12,6 +12,9 @@ rem    source\.cache\        - кэш npm/pnpm и служебные скрип�
 rem  source\ можно целиком стереть и заменить другим экспортом -
 rem  следующий запуск preview.bat всё установит и соберёт заново.
 rem  В корне репозитория артефакты не появляются (они в .gitignore).
+rem  Установка зависимостей повторяет tools/audit_runner.package_install:
+rem  --ignore-scripts, ровно один lock-файл, версия pnpm из packageManager
+rem  или .mise.toml (иначе npx pnpm@версия / понятная ошибка).
 rem ============================================================
 
 cd /d "%~dp0"
@@ -29,28 +32,55 @@ where npm >nul 2>&1
 if errorlevel 1 goto nonpm
 if not exist "%SRC%\package.json" goto nosource
 
-rem ---------- [1/3] зависимости: только source\node_modules ----------
+rem ---------- [1/3] зависимости: механика tools/audit_runner.package_install ----------
+rem Ровно один lock-файл; npm ci / pnpm install --frozen-lockfile --ignore-scripts;
+rem версия pnpm: packageManager, затем .mise.toml, иначе ошибка (как в движке).
 if exist "%SRC%\node_modules\vite\bin\vite.js" goto build
 echo [1/3] Устанавливаю зависимости в source\node_modules ...
 pushd "%SRC%"
-if exist "pnpm-lock.yaml" goto lockpnpm
-if exist "package-lock.json" goto locknpmci
-call npm install --no-package-lock --no-audit --no-fund
-goto installed
-:locknpmci
-call npm ci --no-audit --no-fund
-goto installed
-:lockpnpm
+set "HAS_PNPM_LOCK=0"
+set "HAS_NPM_LOCK=0"
+if exist "pnpm-lock.yaml" set "HAS_PNPM_LOCK=1"
+if exist "package-lock.json" set "HAS_NPM_LOCK=1"
+if "%HAS_PNPM_LOCK%"=="%HAS_NPM_LOCK%" goto badlocks
+set "npm_config_ignore_scripts=true"
+set "npm_config_audit=false"
+set "npm_config_fund=false"
+if "%HAS_NPM_LOCK%"=="1" goto inst_npmci
 where pnpm >nul 2>&1
-if errorlevel 1 goto npmfallback
-set "npm_config_store_dir=%SRC%\.cache\pnpm-store"
-call pnpm install --frozen-lockfile
-if errorlevel 1 call pnpm install
+if not errorlevel 1 goto inst_pnpm
+set "PM_LINE="
+set "PNPM_VER="
+set "V="
+for /f "usebackq delims=" %%A in (`findstr /c:"packageManager" "package.json" 2^>nul`) do set "PM_LINE=%%A"
+set "V=%PM_LINE:*pnpm@=%"
+set "V=%V:"=%"
+for /f "tokens=1 delims=," %%T in ("%V%") do set "V=%%T"
+echo %V%| findstr /r /x "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul 2>&1 && set "PNPM_VER=%V%"
+if defined PNPM_VER goto inst_npx
+set "V="
+for /f "tokens=2 delims==" %%T in ('findstr /c:"npm:pnpm" ".mise.toml" 2^>nul') do set "V=%%T"
+set "V=%V:"=%"
+for /f "tokens=1" %%T in ("%V%") do set "V=%%T"
+echo %V%| findstr /r /x "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul 2>&1 && set "PNPM_VER=%V%"
+if not defined PNPM_VER goto noversion
+goto inst_npx
+:inst_npmci
+call npm ci --ignore-scripts --no-audit --no-fund
 goto installed
-:npmfallback
-call npm install --no-package-lock --no-audit --no-fund
+:inst_pnpm
+set "npm_config_store_dir=%SRC%\.cache\pnpm-store"
+call pnpm install --frozen-lockfile --ignore-scripts
+goto installed
+:inst_npx
+set "npm_config_store_dir=%SRC%\.cache\pnpm-store"
+call npx --yes pnpm@%PNPM_VER% install --frozen-lockfile --ignore-scripts
+goto installed
 :installed
 popd
+set "npm_config_ignore_scripts="
+set "npm_config_audit="
+set "npm_config_fund="
 if not exist "%SRC%\node_modules\vite\bin\vite.js" goto installfail
 
 :build
@@ -132,6 +162,23 @@ exit /b 1
 :installfail
 echo [x] Не удалось установить зависимости (source\node_modules\vite не найден).
 echo     Смотрите вывод npm/pnpm выше.
+pause
+exit /b 1
+
+:badlocks
+popd
+echo [x] Нужен ровно один pnpm-lock.yaml или package-lock.json (как в tools).
+echo     Сейчас в source\: pnpm-lock=%HAS_PNPM_LOCK%, package-lock=%HAS_NPM_LOCK%.
+pause
+exit /b 1
+
+:noversion
+popd
+set "npm_config_ignore_scripts="
+set "npm_config_audit="
+set "npm_config_fund="
+echo [x] pnpm не найден в PATH, а версию определить не удалось.
+echo     Установите pnpm или укажите его точную версию в packageManager/.mise.toml.
 pause
 exit /b 1
 
