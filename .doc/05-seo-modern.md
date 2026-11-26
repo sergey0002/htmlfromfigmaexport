@@ -87,7 +87,7 @@ section#partners → section#contacts → footer.site-footer
       "@type": "SportsTeam", "@id": "https://example.ru/#team",
       "name": "ФБК Таргет", "sport": "Floorball",
       "url": "https://example.ru/", "logo": "https://example.ru/img/target_avatar.jpg",
-      "email": "info@fbk-target.ru", "telephone": "+7 913 764-42-84",
+      "email": "info@example.ru", "telephone": "+7 000 000-00-00",
       "memberOf": { "@type": "SportsOrganization", "name": "Первенство России U19" }
     },
     {
