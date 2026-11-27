@@ -1,0 +1,715 @@
+{
+  "schema_version": 1,
+  "source": {
+    "root": ".",
+    "fingerprint": "de70d1ef0ccb86e78cab8e25dff2b9acccc98f659c29d738e886f5843c948891",
+    "fingerprint_version": 1
+  },
+  "discovery": {
+    "status": "unconfirmed",
+    "unresolved": [
+      "Статическая инвентаризация: живой эталон не запускался; полнота маршрутов и состояний не подтверждена.",
+      "Внешние фотографии Unsplash и шрифты Google Fonts: доступность и права не подтверждены.",
+      "Формы показывают локальный успех; действующий backend не подтверждён.",
+      "AST обнаруживает только поддерживаемые конструкции; агент обязан проверить маршруты, состояния, алиасы и неподтверждённые ссылки."
+    ],
+    "hints": [
+      {
+        "file": "src/App.tsx",
+        "line": 260,
+        "expression": "link"
+      },
+      {
+        "file": "src/App.tsx",
+        "line": 278,
+        "expression": "link"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "home",
+      "title": "Главная",
+      "reference_route": "/",
+      "reference_aliases": [
+        "/#home"
+      ],
+      "output": "index.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "Точка входа проекта; проверить, что существует главная страница",
+        "src/App.tsx:251: go"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "slider",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "region-map",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "about",
+      "title": "О партии",
+      "reference_route": "/#about",
+      "reference_aliases": [],
+      "output": "about.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:312: go",
+        "Условие выбора страницы по hash: about"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program",
+      "title": "Программа",
+      "reference_route": "/#program",
+      "reference_aliases": [],
+      "output": "program.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:313: go",
+        "src/App.tsx:371: go",
+        "src/App.tsx:579: go",
+        "src/App.tsx:883: go",
+        "Условие выбора страницы по hash: program"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "people",
+      "title": "Люди",
+      "reference_route": "/#people",
+      "reference_aliases": [],
+      "output": "people.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:314: go",
+        "src/App.tsx:439: go",
+        "Условие выбора страницы по hash: people"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "activity",
+      "title": "Деятельность",
+      "reference_route": "/#activity",
+      "reference_aliases": [],
+      "output": "activity.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:315: go",
+        "Условие выбора страницы по hash: activity"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "activity-filter",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "regions",
+      "title": "Регионы",
+      "reference_route": "/#regions",
+      "reference_aliases": [],
+      "output": "regions.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:498: go",
+        "src/App.tsx:617: go",
+        "Условие выбора страницы по hash: regions"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "region-map",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "media",
+      "title": "Медиа",
+      "reference_route": "/#media",
+      "reference_aliases": [],
+      "output": "media.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:513: go",
+        "src/App.tsx:528: go",
+        "Условие выбора страницы по hash: media"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "media-tabs",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "reception",
+      "title": "Приёмная",
+      "reference_route": "/#reception",
+      "reference_aliases": [],
+      "output": "reception.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "src/App.tsx:322: go",
+        "Условие выбора страницы по hash: reception"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "reception-form",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "faq",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "contacts",
+      "title": "Контакты",
+      "reference_route": "/#contacts",
+      "reference_aliases": [],
+      "output": "contacts.html",
+      "evidence": [
+        "src/App.tsx: nav, App и компонент страницы",
+        "Условие выбора страницы по hash: contacts"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-economy",
+      "title": "Программа: Экономика",
+      "reference_route": "/#program/economy",
+      "reference_aliases": [],
+      "output": "program/economy.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-education",
+      "title": "Программа: Образование",
+      "reference_route": "/#program/education",
+      "reference_aliases": [],
+      "output": "program/education.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-health",
+      "title": "Программа: Здравоохранение",
+      "reference_route": "/#program/health",
+      "reference_aliases": [],
+      "output": "program/health.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-culture",
+      "title": "Программа: Культура и язык",
+      "reference_route": "/#program/culture",
+      "reference_aliases": [],
+      "output": "program/culture.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-security",
+      "title": "Программа: Безопасность",
+      "reference_route": "/#program/security",
+      "reference_aliases": [],
+      "output": "program/security.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    },
+    {
+      "id": "program-world",
+      "title": "Программа: Внешняя политика",
+      "reference_route": "/#program/world",
+      "reference_aliases": [],
+      "output": "program/world.html",
+      "evidence": [
+        "src/App.tsx: programItems, ProgramPage",
+        "src/App.tsx:921: шаблон и конечный массив programItems"
+      ],
+      "confirmation": "confirmed",
+      "work_status": "pending",
+      "states": [
+        {
+          "id": "mobile-menu",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "join-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "volunteer-modal",
+          "required": true,
+          "scenario": null
+        },
+        {
+          "id": "idea-modal",
+          "required": true,
+          "scenario": null
+        }
+      ],
+      "checks": {
+        "static": "not_run",
+        "browser": "not_run",
+        "manual": "not_run"
+      },
+      "issues": []
+    }
+  ],
+  "unresolved_links": [
+    {
+      "reference_route": "/#about/leadership",
+      "reason": "Ссылка «Биография»; App передаёт AboutPage без detail, отдельная страница не подтверждена."
+    },
+    {
+      "reference_route": "#",
+      "reason": "Социальные ссылки и часть документов — заглушки; адреса не подтверждены."
+    },
+    {
+      "reference_route": "`program/${item.id}`",
+      "reason": "src/App.tsx:378: не найден конечный набор параметров"
+    },
+    {
+      "reference_route": "/#about/leadership",
+      "reason": "src/App.tsx:409: вложенный маршрут требует проверки обработчика и содержимого"
+    }
+  ]
+}

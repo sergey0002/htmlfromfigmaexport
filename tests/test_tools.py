@@ -9,6 +9,7 @@ import threading
 import unittest
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.core import analyze, check_site, fingerprint
 from tools.browser import compare, loopback_url
@@ -30,15 +31,29 @@ class StaticTests(unittest.TestCase):
         self.write('index.html', '<div id="root"></div>')
         self.write('src/App.tsx', '<img src="/images/logo.svg" />')
         self.write('public/images/x.png', 'version https://git-lfs.github.com/spec/v1\noid sha256:xyz\n')
-        result = analyze(self.root)
+        result = analyze(self.root, include_source_text=True)
         self.assertEqual(result['status'], 'INCOMPLETE')
-        self.assertEqual(len(result['warnings']), 2)
+        self.assertEqual(len(result['warnings']), 3)
         self.assertEqual(result['locks'], ['pnpm-lock.yaml'])
         self.assertEqual(result['missing_literal_assets'], ['/images/logo.svg'])
         self.assertIn('public/images/x.png', result['lfs_pointers'])
         self.assertEqual(result['fingerprint'], fingerprint(self.root))
         self.write('public/images/logo.svg', '<svg/>')
         self.assertNotEqual(result['fingerprint'], fingerprint(self.root))
+
+    def test_static_html_inventory_without_npm_and_nested_npm_root(self):
+        self.write('index.html', '<a href="other.html">Other</a>')
+        self.write('other.html', '<main>Other</main>')
+        result = analyze(self.root)
+        self.assertEqual(result['status'], 'INCOMPLETE')
+        self.assertEqual(result['format'], 'static-html')
+        self.assertEqual(result['html_files'], ['index.html', 'other.html'])
+        self.assertNotIn('pages', result)
+        self.write('nested/package.json', '{}')
+        self.write('nested/index.html', '<div></div>')
+        result = analyze(self.root)
+        self.assertEqual(result['format'], 'npm')
+        self.assertEqual(Path(result['root']), self.root/'nested')
 
     def test_invalid_manifest_does_not_crash(self):
         self.write('package.json', '[]')
@@ -77,6 +92,15 @@ class StaticTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn('WARN:', out.getvalue())
         self.assertIn('lost.png', out.getvalue())
+
+    def test_css_binary_resource_lfs_detection_reads_only_prefix(self):
+        self.write('index.html', SHELL.format('<link rel="stylesheet" href="style.css">'))
+        self.write('style.css', 'body { background: url(asset.bin); }')
+        self.write('asset.bin', 'version https://git-lfs.github.com/spec/v1\noid sha256:synthetic\n')
+        with patch.object(Path,'read_bytes',side_effect=AssertionError('unexpected whole-file read')):
+            result=check_site(self.root)
+        self.assertEqual(result['status'],'INCOMPLETE')
+        self.assertTrue(any('LFS pointer' in warning for warning in result['warnings']))
 
     def test_fallback_image_files_and_corrupt_svg_warn(self):
         self.write('index.html', SHELL.format('<span data-image-src="lost.png">fallback</span><img src="broken.svg" alt="">'))

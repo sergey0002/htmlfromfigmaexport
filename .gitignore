@@ -21,6 +21,10 @@ logs/
 
 # Local conversion reports and Python environments; source/ remains tracked.
 .work/
+!/source/.work/
+/source/.work/*
+!/source/.work/manifest.json
+!/source/.work/PAGE-QUEUE.md
 .venv/
 __pycache__/
 *.py[cod]

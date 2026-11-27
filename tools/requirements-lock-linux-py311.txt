@@ -1,0 +1,10 @@
+# Linux x86_64, CPython 3.11 wheels only. Other platforms need their own lock.
+greenlet==3.1.1 --hash=sha256:9e8f8c9cb53cdac7ba9793c276acd90168f416b9ce36799b9b885790f8ad6c0a
+pillow==11.1.0 --hash=sha256:837060a8599b8f5d402e97197d4924f05a2e0d68756998345c829c33186217b1
+playwright==1.49.1 --hash=sha256:753ca90ee31b4b03d165cfd36e477309ebf2b4381953f2a982ff612d85b147d2
+pyee==12.0.0 --hash=sha256:7b14b74320600049ccc7d0e0b1becd3b4bd0a03c745758225e31a59f4095c990
+tree-sitter==0.25.2 --hash=sha256:3e65ae456ad0d210ee71a89ee112ac7e72e6c2e5aac1b95846ecc7afa68a194c
+tree-sitter-javascript==0.23.1 --hash=sha256:056dc04fb6b24293f8c5fec43c14e7e16ba2075b3009c643abf8c85edc4c7c3c
+tree-sitter-typescript==0.23.2 --hash=sha256:e96d36b85bcacdeb8ff5c2618d75593ef12ebaf1b4eace3477e2bdb2abb1752c
+typing-extensions==4.16.0 --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
+PyYAML==6.0.2 --hash=sha256:3ad2a3decf9aaba3d29c8f537ac4b243e36bef957511b4766cb0057d32b0be85

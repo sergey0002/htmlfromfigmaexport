@@ -25,7 +25,7 @@ def loopback_url(url: str) -> bool:
         return False
 
 
-def compare(reference: str, candidate: str, width: int, height: int, output, threshold: float = 0.01, actions=None):
+def compare(reference: str, candidate: str, width: int, height: int, output, threshold: float = 0.01, actions=None, work_dir=None):
     if actions is None: actions = []
     if not isinstance(actions, list) or len(actions) > 30:
         return {'status': 'BLOCKED', 'issues': ['Сценарий должен содержать не более 30 действий']}
@@ -33,8 +33,11 @@ def compare(reference: str, candidate: str, width: int, height: int, output, thr
         return {'status': 'BLOCKED', 'issues': ['Допустимы только HTTP URL на localhost/127.0.0.1/::1 с портом']}
     if not 200 <= width <= 4096 or not 200 <= height <= 4096 or not 0 <= threshold <= 1:
         return {'status': 'BLOCKED', 'issues': ['Некорректный размер viewport или порог']}
-    work = Path('.work').resolve()
-    output = output.resolve()
+    raw_work = Path(work_dir or '.work').absolute(); raw_output = Path(output).absolute()
+    if raw_work.is_symlink() or any(p.is_symlink() for p in (raw_output, *raw_output.parents) if p == raw_work or p.is_relative_to(raw_work)):
+        return {'status':'BLOCKED', 'issues':['Символические ссылки рабочей области запрещены']}
+    work = raw_work.resolve()
+    output = raw_output.resolve()
     if not output.is_relative_to(work) or output == work or (output.exists() and (not output.is_dir() or any(output.iterdir()))):
         return {'status': 'BLOCKED', 'issues': ['Каталог снимков должен быть новым или пустым внутри .work/']}
     try:
@@ -48,7 +51,8 @@ def compare(reference: str, candidate: str, width: int, height: int, output, thr
             browser = pw.chromium.launch(executable_path=os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE') or None)
             try:
                 for name, url in [('reference', reference), ('candidate', candidate)]:
-                    ctx = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1, locale='ru-RU', reduced_motion='reduce')
+                    ctx = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1, locale='ru-RU', reduced_motion='reduce', service_workers='block')
+                    ctx.route_web_socket('**/*', lambda ws: ws.close())
                     allowed = (urlsplit(url).scheme, urlsplit(url).hostname, urlsplit(url).port)
                     def route_handler(route):
                         u = urlsplit(route.request.url)

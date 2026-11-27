@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from html.parser import HTMLParser
 from pathlib import Path
@@ -17,17 +18,44 @@ IGNORED = {"node_modules", ".git", "dist", "build", ".vite", "__pycache__"}
 LFS = b"version https://git-lfs.github.com/spec/v1\n"
 
 
+def _walk(root: Path):
+    """Prune large generated trees rather than descending into ignored folders."""
+    found = []
+    for directory, dirs, names in os.walk(root, followlinks=False):
+        base = Path(directory)
+        allowed = []
+        for name in dirs:
+            path = base / name
+            relative = path.relative_to(root)
+            if name in IGNORED or (len(relative.parts) == 1 and name == '.work'):
+                continue
+            found.append(path)
+            # Preserve the legacy refusal while never descending into ambiguous
+            # secret or workspace names before the guard has run.
+            if not path.is_symlink() and not name.casefold().startswith('.env') and name.casefold() != '.work':
+                allowed.append(name)
+        dirs[:] = allowed
+        for name in names:
+            if name not in IGNORED: found.append(base / name)
+    return sorted(found)
+
+
 def files(root: Path):
-    for p in sorted(root.rglob('*')):
-        if any(part in IGNORED for part in p.relative_to(root).parts) or p.is_symlink():
-            continue
-        if p.is_file():
+    for p in _walk(root):
+        if not p.is_symlink() and p.is_file():
             yield p
 
 
 def fingerprint(root: Path) -> str:
     h = hashlib.sha256()
-    for p in files(root):
+    paths = _walk(root)
+    # Do not silently redefine the legacy v1 identity by excluding .env.
+    # Refuse it instead; use the explicit v2 source policy for inventory.
+    if any(p.name.casefold().startswith('.env') or p.name.casefold() == '.work' for p in paths):
+        raise ValueError('Legacy fingerprint не поддерживает .env* и вложенные .work: используйте snapshot source v2; содержимое не читалось')
+    for p in paths:
+        if p.is_symlink() or not p.is_file():
+            continue
         name = p.relative_to(root).as_posix()
         h.update(name.encode('utf8') + b'\0')
         with p.open('rb') as f:
@@ -37,12 +65,25 @@ def fingerprint(root: Path) -> str:
     return h.hexdigest()
 
 
-def analyze(root: Path) -> dict:
+def analyze(root: Path, *, include_source_text: bool = False) -> dict:
     root = root.resolve()
     issues, warnings = [], []
     if not root.is_dir():
         return {'status': 'BLOCKED', 'issues': [f'Каталог не найден: {root}']}
+    if any(p.name.casefold().startswith('.env') or p.name.casefold() == '.work' for p in _walk(root)):
+        return {'status': 'BLOCKED', 'issues': ['Legacy analyze/fingerprint не поддерживает .env* и вложенные .work: используйте snapshot source v2; содержимое не читалось']}
     manifests = [p for p in files(root) if p.name == 'package.json']
+    if not manifests:
+        html = [p.relative_to(root).as_posix() for p in files(root) if p.suffix.lower() in ('.html', '.htm')]
+        if not html:
+            return {'status': 'BLOCKED', 'issues': ['Нет package.json или статических HTML-файлов; требуется ручной выбор входа']}
+        symlinks = [p.relative_to(root).as_posix() for p in _walk(root) if p.is_symlink()]
+        if symlinks:
+            return {'status': 'BLOCKED', 'issues': ['Symlink требуют ручной проверки'], 'symlinks': symlinks}
+        return {'status': 'INCOMPLETE', 'format': 'static-html', 'root': str(root),
+                'fingerprint': fingerprint(root), 'html_files': html, 'issues': [],
+                'warnings': ['HTML-файлы — факты инвентаря, а не подтверждённый список страниц'],
+                'next': 'Исследовать маршруты и состояния; файлы в исключённых каталогах не анализируются.'}
     if len(manifests) != 1:
         return {'status': 'BLOCKED', 'issues': [f'Найдено package.json: {len(manifests)}; нужен один однозначный корень']}
     project = manifests[0].parent
@@ -54,9 +95,7 @@ def analyze(root: Path) -> dict:
     if len(locks) != 1:
         issues.append(f'Lock-файлов: {len(locks)}; определить пакетный менеджер вручную')
     lfs, zones, symlinks = [], [], []
-    for p in project.rglob('*'):
-        if any(part in IGNORED for part in p.relative_to(project).parts):
-            continue
+    for p in _walk(project):
         if p.is_symlink():
             symlinks.append(p.relative_to(project).as_posix())
         elif p.is_file():
@@ -83,7 +122,8 @@ def analyze(root: Path) -> dict:
             target = (project / 'public' / ref.lstrip('/')).resolve()
             if target.is_relative_to((project / 'public').resolve()) and not target.is_file():
                 missing.add(ref)
-    if missing: warnings.append('Возможные отсутствующие public-ресурсы: ' + ', '.join(sorted(missing)))
+    if missing:
+        warnings.append('Возможные отсутствующие public-ресурсы: ' + (', '.join(sorted(missing)) if include_source_text else f'{len(missing)}; значения скрыты'))
     if not isinstance(package, dict):
         return {'status': 'BLOCKED', 'issues': ['package.json должен быть объектом']}
     deps = {}
@@ -95,11 +135,15 @@ def analyze(root: Path) -> dict:
     if not isinstance(scripts, dict):
         scripts = {}
         issues.append('Некорректные scripts в package.json')
+    if include_source_text: warnings.append('Содержимое scripts, версий и путей может содержать чувствительные данные.')
+    recognized = {k: deps[k] for k in ('react', 'react-dom', 'vite', 'tailwindcss', '@tailwindcss/vite') if k in deps}
     return {'status': 'BLOCKED' if symlinks else 'INCOMPLETE',
-            'root': str(project), 'fingerprint': fingerprint(project), 'locks': locks,
-            'engines': package.get('engines', {}), 'dependencies': {k: deps[k] for k in ('react', 'react-dom', 'vite', 'tailwindcss', '@tailwindcss/vite') if k in deps},
-            'scripts': scripts, 'lfs_pointers': lfs, 'symlinks': symlinks,
-            'zone_identifiers': zones, 'missing_literal_assets': sorted(missing), 'issues': issues, 'warnings': warnings,
+            'format': 'npm', 'root': str(project), 'fingerprint': fingerprint(project), 'locks': locks,
+            'engines': package.get('engines', {}) if include_source_text else None,
+            'dependencies': recognized if include_source_text else {k: None for k in recognized},
+            'scripts': scripts if include_source_text else None, 'script_count': len(scripts),
+            'lfs_pointers': lfs, 'symlinks': symlinks, 'source_text_included': include_source_text,
+            'zone_identifiers': zones, 'missing_literal_assets': sorted(missing) if include_source_text else None, 'missing_literal_assets_count': len(missing), 'issues': issues, 'warnings': warnings,
             'next': 'Проверить зависимости, конфиги, ресурсы и безопасность до запуска; затем сравнить все необходимые состояния в браузере.'}
 
 
@@ -146,16 +190,24 @@ def resolve_ref(root: Path, origin: Path, value: str):
     return target, unquote(u.fragment)
 
 
-def check_site(root: Path) -> dict:
+def check_site(root: Path, *, snapshot_access=None) -> dict:
     root = root.resolve()
     if not root.is_dir(): return {'status': 'BLOCKED', 'issues': [f'Каталог не найден: {root}']}
-    pages = [p for p in files(root) if p.suffix.lower() in ('.html', '.htm')]
+    if snapshot_access is not None and snapshot_access.root!=root:
+        raise ValueError('Snapshot не соответствует корню сайта')
+    candidates=list(snapshot_access.legacy_files()) if snapshot_access else list(files(root))
+    read_text=snapshot_access.text if snapshot_access else lambda p: p.read_text(encoding='utf8')
+    is_file=snapshot_access.is_file if snapshot_access else lambda p: p.is_file()
+    def prefix(path):
+        if snapshot_access: return snapshot_access.prefix(path,len(LFS))
+        with path.open('rb') as file: return file.read(len(LFS))
+    pages = [p for p in candidates if p.suffix.lower() in ('.html', '.htm')]
     if not pages: return {'status': 'BLOCKED', 'issues': ['HTML-страницы не найдены']}
     docs, issues, warnings = {}, [], []
     checked_svg = set()
     for p in pages:
         try:
-            parser = Page(); parser.feed(p.read_text(encoding='utf8')); parser.close(); docs[p] = parser
+            parser = Page(); parser.feed(read_text(p)); parser.close(); docs[p] = parser
         except (OSError, UnicodeError, ValueError) as e:
             issues.append(f'{p.relative_to(root)}: ошибка чтения: {e}')
             continue
@@ -170,24 +222,24 @@ def check_site(root: Path) -> dict:
             if target is None:
                 if fragment: issues.append(f'{p.relative_to(root)}: {fragment}: {ref}')
                 continue
-            if not target.is_file(): warnings.append(f'{p.relative_to(root)}: отсутствует файл {ref}'); continue
-            with target.open('rb') as f:
-                is_pointer = f.read(len(LFS)) == LFS
+            if not is_file(target): warnings.append(f'{p.relative_to(root)}: отсутствует файл {ref}'); continue
+            is_pointer = prefix(target) == LFS
             if is_pointer:
                 warnings.append(f'{p.relative_to(root)}: LFS pointer вместо ресурса: {ref}')
             elif target.suffix.lower() == '.svg' and target not in checked_svg:
                 checked_svg.add(target)
                 try:
-                    ET.parse(target)
+                    if snapshot_access: ET.fromstring(snapshot_access.bytes(target))
+                    else: ET.parse(target)
                 except (ET.ParseError, OSError) as exc:
                     warnings.append(f'{p.relative_to(root)}: повреждённый SVG {ref}: {exc}')
             if fragment and target in docs and fragment not in docs[target].ids:
                 issues.append(f'{p.relative_to(root)}: отсутствует якорь {ref}')
             if ref.startswith('/') and not ref.startswith('//'):
                 warnings.append(f'{p.relative_to(root)}: корневой путь не работает в подпапке: {ref}')
-    for p in files(root):
+    for p in candidates:
         if p.suffix.lower() != '.css': continue
-        try: text = p.read_text(encoding='utf8')
+        try: text = read_text(p)
         except (OSError, UnicodeError) as e:
             issues.append(f'{p.relative_to(root)}: ошибка чтения CSS: {e}'); continue
         refs = re.findall(r'url\(\s*[\'"]?([^\'"\)]+)', text, re.I)
@@ -199,10 +251,15 @@ def check_site(root: Path) -> dict:
             if target is None:
                 if error: issues.append(f'{p.relative_to(root)}: {error}: {ref}')
                 continue
-            if not target.is_file(): warnings.append(f'{p.relative_to(root)}: отсутствует CSS ресурс {ref}')
-            elif target.read_bytes().startswith(LFS): warnings.append(f'{p.relative_to(root)}: LFS pointer: {ref}')
+            if not is_file(target): warnings.append(f'{p.relative_to(root)}: отсутствует CSS ресурс {ref}')
+            else:
+                # Snapshot mode verifies all bytes but retains only the prefix;
+                # legacy mode retains the old unbound prefix-only behaviour.
+                is_pointer=prefix(target) == LFS
+                if is_pointer: warnings.append(f'{p.relative_to(root)}: LFS pointer: {ref}')
             if ref.startswith('/'): warnings.append(f'{p.relative_to(root)}: корневой CSS путь: {ref}')
     # Static checks never certify visual, functional, or HTML5 correctness.
     return {'status': 'FAIL' if issues else 'INCOMPLETE', 'pages': [str(p.relative_to(root)) for p in pages],
-            'fingerprint': fingerprint(root), 'issues': issues, 'warnings': warnings,
+            # Do not silently substitute a v2 digest for the legacy v1 fingerprint.
+            'fingerprint': None if snapshot_access else fingerprint(root), 'issues': issues, 'warnings': warnings,
             'next': 'Проверить HTML5, поведение и визуальное соответствие в браузере; статическая проверка не является приёмкой.'}
