@@ -6,6 +6,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.audit_runner import package_install, run, brief_report
 from tools.screen_audit import load_scenarios, audit_urls, inline_font_css
@@ -32,9 +33,11 @@ class AuditSetupTests(unittest.TestCase):
             self.assertEqual(result['canvas_size'], [10, 15])
             self.assertEqual(result['missing_pixels'], 50)
             self.assertGreater(result['difference_ratio'], 0.33)
-            self.assertEqual(Image.open(folder/'full-heatmap.png').getpixel((2, 12)), (255, 0, 255))
-            self.assertEqual(Image.open(folder/'full-overlay.png').size, (10, 15))
-            self.assertEqual(Image.open(folder/'full-overlay.png').getpixel((2, 3)), (255, 127, 127))
+            with Image.open(folder/'full-heatmap.png') as heatmap:
+                self.assertEqual(heatmap.getpixel((2, 12)), (255, 0, 255))
+            with Image.open(folder/'full-overlay.png') as overlay:
+                self.assertEqual(overlay.size, (10, 15))
+                self.assertEqual(overlay.getpixel((2, 3)), (255, 127, 127))
             strict = save_comparison(png(first), png(second), folder, 'strict', 255)
             self.assertEqual(strict['difference_ratio'], 50 / 150)
             huge = Image.new('RGB', (4000, 3001), 'white')
@@ -59,6 +62,27 @@ class AuditSetupTests(unittest.TestCase):
             for bad in [[{'name':'../escape','reference':[],'candidate':[]}], [{'name':'x','reference':[{'type':'press','key':'F5'}],'candidate':[]}], [{'name':'x','viewports':[320],'reference':[],'candidate':[]}]]:
                 p.write_text(json.dumps(bad))
                 with self.assertRaises(ValueError): load_scenarios(p)
+
+    def test_navigation_and_focused_scenario_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'s.json'
+            valid=[{'name':'navigation','reference':[{'type':'navigate','route':'/sub/page.html'},{'type':'history','direction':'back'}],
+                    'candidate':[], 'assertions':{'reference':[{'type':'focused','selector':'button'}],
+                                                'candidate':[{'type':'attribute','selector':'a','name':'aria-current','value':'page'}]}}]
+            p.write_text(json.dumps(valid)); self.assertEqual(load_scenarios(p),valid)
+            for action in ({'type':'navigate','route':'//example.com'}, {'type':'navigate','route':'/%2e%2e/x'}, {'type':'history','direction':'refresh'}, {'type':'navigate','route':'http://127.0.0.1:22/'}):
+                valid[0]['reference']=[action]; p.write_text(json.dumps(valid))
+                with self.subTest(action=action),self.assertRaises(ValueError): load_scenarios(p)
+
+    def test_assertion_schema(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'scenario.json'
+            valid=[{'name':'menu','reference':[],'candidate':[], 'assertions':{
+                'reference':[{'type':'visible','selector':'#menu'}],
+                'candidate':[{'type':'attribute','selector':'#menu','name':'aria-expanded','value':'true'}]}}]
+            path.write_text(json.dumps(valid)); self.assertEqual(load_scenarios(path),valid)
+            valid[0]['assertions']['candidate'][0]['name']='onclick'; path.write_text(json.dumps(valid))
+            with self.assertRaises(ValueError): load_scenarios(path)
 
     def test_brief_prioritizes_fullpage_warning_and_limits(self):
         data = {'status': 'INCOMPLETE', 'warnings': [f'missing {i}' for i in range(12)] + ['Не удалось снять/сравнить длинную страницу']}
@@ -89,6 +113,63 @@ class AuditSetupTests(unittest.TestCase):
 
 @unittest.skipUnless(os.environ.get('RUN_BROWSER_TESTS') == '1', 'browser not requested')
 class ScreenBrowserTests(unittest.TestCase):
+    def test_failed_assertion_is_a_failure_not_a_pass(self):
+        with tempfile.TemporaryDirectory(dir='.') as tmp:
+            root=Path(tmp).absolute(); (root/'index.html').write_text('<!doctype html><title>Test</title><button>Open</button>')
+            server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root)))
+            thread=threading.Thread(target=server.serve_forever,daemon=True); thread.start()
+            try:
+                url='http://127.0.0.1:'+str(server.server_port); out=root/'out'; out.mkdir()
+                scenarios=[{'name':'test','viewports':[390], 'reference':[], 'candidate':[],
+                            'assertions':{'reference':[{'type':'text','selector':'button','value':'Open'}],
+                                          'candidate':[{'type':'text','selector':'button','value':'Wrong'}]}}]
+                result=audit_urls(url,url,out,scenarios)
+                state=next(x for x in result['viewports'][0]['states'] if x['name']=='test')
+                self.assertEqual(state['status'],'FAIL'); self.assertEqual(state['assertions_checked'],2)
+                self.assertTrue(any('assertion' in x for x in state['mismatches']))
+                self.assertEqual(result['status'],'FAIL')
+            finally: server.shutdown(); server.server_close(); thread.join()
+
+    def test_navigation_history_and_focus_assertions(self):
+        with tempfile.TemporaryDirectory(dir='.') as tmp:
+            root=Path(tmp).absolute(); (root/'index.html').write_text('<!doctype html><title>Home</title><button>Home</button>')
+            (root/'about.html').write_text('<!doctype html><title>About</title><button id="target" aria-current="page">About</button>')
+            server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root)))
+            thread=threading.Thread(target=server.serve_forever,daemon=True); thread.start()
+            try:
+                url='http://127.0.0.1:'+str(server.server_port); out=root/'out'; out.mkdir()
+                actions=[{'type':'navigate','route':'/about.html'},{'type':'history','direction':'back'},
+                         {'type':'history','direction':'forward'},{'type':'focus','selector':'#target'}]
+                checks=[{'type':'focused','selector':'#target'}, {'type':'attribute','selector':'#target','name':'aria-current','value':'page'}]
+                scenario=[{'name':'navigate','viewports':[390],'reference':actions,'candidate':actions,
+                           'assertions':{'reference':checks,'candidate':checks}}]
+                report=audit_urls(url,url,out,scenario)
+                state=next(x for x in report['viewports'][0]['states'] if x['name']=='navigate')
+                self.assertEqual(state['status'],'OK',state); self.assertEqual(state['assertions_checked'],4)
+                self.assertEqual(report['status'],'INCOMPLETE')
+            finally: server.shutdown(); server.server_close(); thread.join()
+
+    def test_reference_override_is_reapplied_after_navigation(self):
+        with tempfile.TemporaryDirectory(dir='.') as tmp:
+            root=Path(tmp).absolute()
+            (root/'index.html').write_text('<!doctype html><title>Home</title><p>Home</p>')
+            (root/'about.html').write_text('<!doctype html><title>About</title><p>About</p>')
+            server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root)))
+            thread=threading.Thread(target=server.serve_forever,daemon=True); thread.start()
+            try:
+                url='http://127.0.0.1:'+str(server.server_port); out=root/'out'; out.mkdir()
+                actions=[{'type':'navigate','route':'/about.html'}]
+                scenario=[{'name':'navigate','viewports':[390],'reference':actions,'candidate':actions}]
+                # The real API uses a local font CSS override. Substitute a visible
+                # deterministic style to observe whether navigation lost the injection.
+                with patch('tools.screen_audit.inline_font_css',return_value=('body {background: rgb(255, 0, 0) !important}',[])):
+                    report=audit_urls(url,url,out,scenario,font_css=root/'fixture-font.css')
+                state=next(x for x in report['viewports'][0]['states'] if x['name']=='navigate')
+                self.assertEqual(state['action']['status'],'FAIL',state)
+                self.assertGreater(state['action']['difference_ratio'],0.5)
+                self.assertIsNotNone(report['reference_font_override'])
+            finally: server.shutdown(); server.server_close(); thread.join()
+
     def test_visual_difference_is_detected_on_lower_screens(self):
         Path('.work').mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir='.work', prefix='pixel-test-') as tmp:

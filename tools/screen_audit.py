@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from .browser import FREEZE_CSS, loopback_url
 from .visual_diff import save_comparison
+from .queue import local_route
 
 VIEWPORTS = [(390, 844), (768, 1024), (1440, 900)]
 MAX_SCREENS = 100
@@ -25,7 +26,7 @@ def load_scenarios(path: Path | None):
         raise ValueError('Сценарии должны быть массивом не более 30 состояний')
     names = set()
     for item in data:
-        if not isinstance(item, dict) or set(item) - {'name', 'reference', 'candidate', 'viewports'}:
+        if not isinstance(item, dict) or set(item) - {'name', 'reference', 'candidate', 'viewports', 'assertions'}:
             raise ValueError('Некорректная структура сценария')
         name = item.get('name')
         if not isinstance(name, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{1,48}', name) or name == 'initial' or name in names:
@@ -35,12 +36,18 @@ def load_scenarios(path: Path | None):
             sizes = item['viewports']
             if not isinstance(sizes, list) or not sizes or any(type(x) is not int or x not in [w for w, _ in VIEWPORTS] for x in sizes) or len(sizes) != len(set(sizes)):
                 raise ValueError('viewports: непустой массив ширин из 390, 768, 1440')
+        if 'assertions' in item:
+            assertions = item['assertions']
+            if not isinstance(assertions, dict) or set(assertions) != {'reference', 'candidate'}:
+                raise ValueError('assertions требует reference и candidate')
+            for side in ('reference', 'candidate'):
+                _validate_assertions(assertions[side])
         for side in ('reference', 'candidate'):
             actions = item.get(side)
             if not isinstance(actions, list) or len(actions) > 30:
                 raise ValueError('Каждая сторона должна содержать массив до 30 действий')
             for action in actions:
-                if not isinstance(action, dict) or action.get('type') not in ('click', 'press', 'scroll', 'focus', 'fill', 'check', 'select'):
+                if not isinstance(action, dict) or action.get('type') not in ('click', 'press', 'scroll', 'focus', 'fill', 'check', 'select', 'navigate', 'history'):
                     raise ValueError('Недопустимый тип действия')
                 kind = action['type']
                 if kind in ('click', 'focus', 'fill', 'check', 'select'):
@@ -56,6 +63,12 @@ def load_scenarios(path: Path | None):
                 elif kind == 'press':
                     if set(action) != {'type', 'key'} or action['key'] not in ('Tab', 'Escape', 'Enter', 'Space'):
                         raise ValueError('press допускает Tab, Escape, Enter или Space')
+                elif kind == 'navigate':
+                    if set(action)!={'type','route'} or not local_route(action.get('route')) or len(action['route'])>2000:
+                        raise ValueError('navigate допускает только локальный маршрут')
+                elif kind == 'history':
+                    if set(action)!={'type','direction'} or action['direction'] not in ('back','forward'):
+                        raise ValueError('history допускает только back или forward')
                 elif set(action) != {'type', 'y'} or type(action.get('y')) is not int or not 0 <= action['y'] <= 60000:
                     raise ValueError('scroll требует y от 0 до 60000')
     return data
@@ -84,6 +97,37 @@ def inline_font_css(path: Path):
     if '@import' in result.lower() or not embedded:
         raise ValueError('CSS шрифта должен содержать локальные файлы и не содержать @import')
     return result, embedded
+
+
+def _validate_assertions(assertions):
+    if not isinstance(assertions, list) or len(assertions) > 30:
+        raise ValueError('assertions: массив не более 30 проверок')
+    for check in assertions:
+        if not isinstance(check, dict) or check.get('type') not in ('visible','hidden','focused','text','attribute'):
+            raise ValueError('Недопустимая assertion')
+        kind = check['type']; keys = {'type','selector'}
+        if kind == 'text': keys |= {'value'}
+        if kind == 'attribute': keys |= {'name','value'}
+        if set(check) != keys or not isinstance(check.get('selector'),str) or not 0 < len(check['selector']) <= 500:
+            raise ValueError('Некорректные поля assertion')
+        if 'value' in keys and (not isinstance(check.get('value'),str) or len(check['value']) > 200):
+            raise ValueError('Assertion value должна быть строкой до 200 символов')
+        if kind == 'attribute' and check['name'] not in ('aria-expanded','aria-selected','aria-checked','aria-hidden','aria-current','aria-controls','aria-label','disabled','role'):
+            raise ValueError('Assertion attribute не разрешён')
+
+
+def _assertions(page, checks, side):
+    _validate_assertions(checks)
+    failures = []
+    for check in checks:
+        locator = page.locator(check['selector']); count = locator.count(); kind = check['type']
+        if kind == 'hidden': ok = count == 0 or (count == 1 and not locator.is_visible())
+        elif kind == 'visible': ok = count == 1 and locator.is_visible()
+        elif kind == 'focused': ok = count == 1 and locator.evaluate('(e) => e === document.activeElement')
+        elif kind == 'text': ok = count == 1 and locator.inner_text(timeout=5000).strip() == check['value']
+        else: ok = count == 1 and locator.get_attribute(check['name'],timeout=5000) == check['value']
+        if not ok: failures.append(f"{side}: assertion {kind} не выполнена: {check['selector']}")
+    return failures
 
 
 def _actions(page, actions, allowed):
@@ -119,6 +163,18 @@ def _actions(page, actions, allowed):
             if action['key'] in ('Enter', 'Space') and not page.evaluate(f'() => ({safe_activation})(document.activeElement)'):
                 raise ValueError('Enter/Space допустимы только на безопасном элементе управления')
             page.keyboard.press(action['key'])
+        elif kind == 'navigate':
+            if not local_route(action['route']): raise ValueError('Недопустимый маршрут навигации')
+            origin=urlsplit(page.url)
+            response=page.goto(f'{origin.scheme}://{origin.netloc}{action["route"]}',wait_until='load',timeout=30000)
+            if response is not None and response.status>=400: raise ValueError(f'HTTP {response.status} при переходе')
+        elif kind == 'history':
+            before=page.url
+            if action['direction']=='back': response=page.go_back(wait_until='load',timeout=30000)
+            elif action['direction']=='forward': response=page.go_forward(wait_until='load',timeout=30000)
+            else: raise ValueError('Недопустимое направление истории')
+            if page.url==before and response is None: raise ValueError('Переход по истории не выполнен')
+            if response is not None and response.status>=400: raise ValueError(f'HTTP {response.status} при переходе')
         else:
             page.evaluate('(y) => window.scrollTo(0, y)', action['y'])
         parts = urlsplit(page.url)
@@ -138,7 +194,7 @@ def _measure(page):
           value_length:('value' in e && e.tagName !== 'BUTTON') ? String(e.value).length : null}))})""")
 
 
-def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', threshold=0.001, font_css=None, channel_tolerance=12):
+def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', threshold=0.001, font_css=None, channel_tolerance=12, reference_route=None, candidate_route=None):
     """Capture each viewport-height segment; report coverage even on failure."""
     scenarios = scenarios or []
     result = {'schema_version': 1, 'status': 'INCOMPLETE', 'issues': [], 'warnings': [],
@@ -148,7 +204,14 @@ def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', th
               'next': 'Проверить интерактив, все маршруты и вручную изучить несовпадения; автоматическая сверка не является полной приёмкой.'}
     if not all(loopback_url(url) for url in (reference, candidate)):
         result['status'] = 'BLOCKED'; result['issues'].append('Разрешены только локальные HTTP URL с портом'); return result
-    if not route.startswith('/') or route.startswith('//') or urlsplit(route).netloc or urlsplit(route).scheme:
+    result['reference_provenance'] = 'external-unverified'
+    result['warnings'].append('Происхождение эталона и независимость сайтов не подтверждены; аудит диагностический.')
+    if reference.rstrip('/') == candidate.rstrip('/'):
+        result['warnings'].append('Эталон и кандидат имеют один URL; это не независимое сравнение.')
+    reference_route = reference_route if reference_route is not None else route
+    candidate_route = candidate_route if candidate_route is not None else route
+    result['reference_route'], result['candidate_route'] = reference_route, candidate_route
+    if not local_route(reference_route) or not local_route(candidate_route):
         result['status'] = 'BLOCKED'; result['issues'].append('Маршрут должен быть относительным путём внутри сайта'); return result
     if not 0 <= threshold <= 1 or type(channel_tolerance) is not int or not 0 <= channel_tolerance <= 255:
         result['status'] = 'BLOCKED'; result['issues'].append('Некорректный порог'); return result
@@ -164,6 +227,7 @@ def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', th
             result['warnings'].append('Для исходника использована явно заданная локальная замена шрифта; оригинальный CDN не подтверждён.')
         with sync_playwright() as pw:
             browser = pw.chromium.launch(executable_path=os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE') or None)
+            result['browser_version'] = browser.version
             try:
                 for width, height in VIEWPORTS:
                     vp = {'width': width, 'height': height, 'states': []}
@@ -175,9 +239,10 @@ def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', th
                         vp['states'].append(entry)
                         try:
                             for name, base in [('reference', reference), ('candidate', candidate)]:
-                                url = base.rstrip('/') + route
+                                url = base.rstrip('/') + (reference_route if name == 'reference' else candidate_route)
                                 origin = urlsplit(base); allowed = (origin.scheme, origin.hostname, origin.port)
-                                context = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1, locale='ru-RU', reduced_motion='reduce')
+                                context = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1, locale='ru-RU', reduced_motion='reduce', service_workers='block')
+                                context.route_web_socket('**/*', lambda ws: ws.close())
                                 contexts.append(context)
                                 def make_handler(origin, side):
                                     def handler(r):
@@ -205,6 +270,16 @@ def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', th
                                     page.add_style_tag(content=font_content)
                                 page.evaluate('document.fonts.ready')
                                 _actions(page, state[name], allowed)
+                                # Navigation replaces injected styles, including any explicit
+                                # reference font override. Restore both before assertions and capture.
+                                page.add_style_tag(content=FREEZE_CSS)
+                                if name == 'reference' and font_content:
+                                    page.add_style_tag(content=font_content)
+                                page.evaluate('document.fonts.ready')
+                                checks = state.get('assertions', {}).get(name, [])
+                                entry.setdefault('assertions_checked', 0)
+                                entry['assertions_checked'] += len(checks)
+                                entry.setdefault('mismatches', []).extend(_assertions(page, checks, name))
                                 if state['name'] != 'initial':
                                     page.wait_for_timeout(100)
                                     action_offsets.append(page.evaluate('window.scrollY'))
@@ -275,7 +350,7 @@ def audit_urls(reference, candidate, output: Path, scenarios=None, route='/', th
                                 state_warnings.append(f'Не удалось снять/сравнить длинную страницу: {exc}; поэкранные снимки сохранены')
                             entry['warnings'] = list(dict.fromkeys(state_warnings))
                             if entry.get('mismatches') or entry.get('action', {}).get('status') == 'FAIL' or any(x['status']=='FAIL' for x in entry['screens']): entry['status'] = 'FAIL'
-                            elif entry.get('action', {}).get('status') == 'REVIEW' or any(x['status']=='REVIEW' for x in entry['screens']): entry['status'] = 'REVIEW'
+                            elif entry['warnings'] or entry.get('action', {}).get('status') == 'REVIEW' or any(x['status']=='REVIEW' for x in entry['screens']): entry['status'] = 'REVIEW'
                             else: entry['status'] = 'OK'
                             result['coverage']['states_checked'] += 1
                             result['warnings'].extend(entry['warnings'])

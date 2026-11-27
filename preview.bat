@@ -9,8 +9,7 @@ rem  ВСЕ артефакты живут ТОЛЬКО внутри source\:
 rem    source\node_modules\  - зависимости (рядом с package.json);
 rem    source\build\         - собранная статика (index.html, assets);
 rem    source\.cache\        - кэш npm/pnpm и служебные скрипты.
-rem  source\ можно целиком стереть и заменить другим экспортом -
-rem  следующий запуск preview.bat всё установит и соберёт заново.
+rem  Не удаляйте source\ и пользовательские данные без явного согласия.
 rem  В корне репозитория артефакты не появляются (они в .gitignore).
 rem  Установка зависимостей повторяет tools/audit_runner.package_install:
 rem  --ignore-scripts, ровно один lock-файл, версия pnpm из packageManager
@@ -22,6 +21,15 @@ set "ROOT=%CD%"
 set "SRC=%ROOT%\source"
 set "PORT=8084"
 set "URL=http://localhost:%PORT%/"
+
+rem Этот вспомогательный скрипт НЕ песочница и не доказательство происхождения.
+echo [!] ВНИМАНИЕ: запуск выполняет npm build/preview и код экспорта без изоляции.
+echo     Скрипт изменит source\node_modules, source\build и source\.cache.
+echo     Используйте только доверенный экспорт, без секретов и чувствительных сервисов.
+choice /C YN /N /M "Продолжить на свой риск? [Y/N] "
+if errorlevel 2 exit /b 1
+netstat -ano | findstr /c:":%PORT% " >nul 2>&1
+if not errorlevel 1 goto portbusy
 
 rem Кэш npm - строго внутрь source, чтобы npm не писал вне него.
 set "npm_config_cache=%SRC%\.cache\npm"
@@ -122,10 +130,10 @@ timeout /t 5 /nobreak >nul
 goto openchrome
 
 :portbusy
-echo [i] Порт %PORT% уже занят - используется запущенный сервер.
-echo     Если страница выглядит устаревшей, закройте окно
-echo     "Vite preview" и запустите preview.bat ещё раз.
-goto openchrome
+echo [x] Порт %PORT% занят. Не открываю неизвестный listener как эталон.
+echo     Остановите занимающий порт процесс и повторите запуск.
+pause
+exit /b 1
 
 :openchrome
 set "CHROME="
